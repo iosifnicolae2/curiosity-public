@@ -353,6 +353,7 @@ class PPOModel(LearningModel):
             value_losses.append(value_loss)
         self.value_loss = tf.reduce_mean(value_losses)
 
+        # Clipped Surrogate Objective
         r_theta = tf.exp(probs - old_probs)
         p_opt_a = r_theta * advantage
         p_opt_b = (
