@@ -228,3 +228,10 @@ dmypy.json
 .pyre/
 
 # End of https://www.gitignore.io/api/python,jupyternotebooks
+
+
+test/*
+tmp.nn
+tmp/*
+output/
+UnityProject/csharp_timers.json
