@@ -9,3 +9,6 @@ cd ..
 pip install -r requirements.txt
 
 
+brew install graphviz
+pip install graphviz
+pip install tfgraphviz
