@@ -7,6 +7,7 @@ from collections import defaultdict
 from typing import Dict
 
 import numpy as np
+import tensorflow as tf
 
 from mlagents.envs.brain import AllBrainInfo
 from mlagents.trainers.ppo.policy import PPOPolicy
@@ -74,6 +75,8 @@ class PPOTrainer(RLTrainer):
             self.policy = PPOPolicy(
                 seed, brain, trainer_parameters, self.is_training, load
             )
+
+        self.summary_writer = tf.summary.FileWriter(self.summary_path, self.policy.sess.graph)
 
         for _reward_signal in self.policy.reward_signals.keys():
             self.collected_rewards[_reward_signal] = {}
