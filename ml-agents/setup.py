@@ -66,7 +66,6 @@ setup(
         "pyyaml",
         "tensorflow>=1.7,<2.0",
         'pypiwin32==223;platform_system=="Windows"',
-        'setuptools==41.0.0'
     ],
     python_requires=">=3.6.1",
     entry_points={"console_scripts": ["mlagents-learn=mlagents.trainers.learn:main"]},
