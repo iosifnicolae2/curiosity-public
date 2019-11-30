@@ -46,7 +46,6 @@
 # Builds
 *.apk
 *.unitypackage
-*.app
 *.exe
 *.x86_64
 *.x86
