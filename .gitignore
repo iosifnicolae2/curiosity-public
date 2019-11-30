@@ -235,3 +235,4 @@ tmp.nn
 tmp/*
 output/
 UnityProject/csharp_timers.json
+UnityProject-copy/*
