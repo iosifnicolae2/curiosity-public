@@ -10,7 +10,7 @@ import numpy as np
 
 from typing import Any, Callable, Optional, List, NamedTuple
 
-
+from mlagents.envs.simple_env_manager import SimpleEnvManager
 from mlagents.trainers.trainer_controller import TrainerController
 from mlagents.trainers.exception import TrainerError
 from mlagents.trainers.meta_curriculum import MetaCurriculum
@@ -214,7 +214,12 @@ def run_training(
         port,
         options.env_args,
     )
-    env = SubprocessEnvManager(env_factory, options.num_envs)
+    if options.debug:
+        env_instance = env_factory(1)
+        env = SimpleEnvManager(env_instance)
+    else:
+        env = SubprocessEnvManager(env_factory, options.num_envs)
+
     maybe_meta_curriculum = try_create_meta_curriculum(
         curriculum_folder, env, options.lesson
     )
