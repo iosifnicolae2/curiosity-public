@@ -3,10 +3,12 @@ from typing import Any, Dict
 
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 from mlagents.envs.exception import UnityException
 from mlagents.envs.policy import Policy
 from mlagents.envs.action_info import ActionInfo
+from mlagents.trainers.global_variables import get_debug
 from tensorflow.python.platform import gfile
 from tensorflow.python.framework import graph_util
 from mlagents.trainers import tensorflow_to_barracuda as tf2bc
@@ -85,6 +87,12 @@ class TFPolicy(Policy):
                         brain.brain_name, self.m_size
                     )
                 )
+        self.im1 = None
+        self.frame_count = 0
+        if get_debug():
+            ax1 = plt.subplot(1, 1, 1)
+            self.im1 = ax1.imshow(np.zeros((128,128, 3)))
+            plt.ion()
 
     def _initialize_graph(self):
         with self.graph.as_default():
@@ -122,6 +130,37 @@ class TFPolicy(Policy):
         """
         if len(brain_info.agents) == 0:
             return ActionInfo([], [], [], None, None)
+
+        if self.im1:
+            self.frame_count += 1
+            display_observation_frame = self.frame_count == 10
+            if brain_info.visual_observations and display_observation_frame:
+                for observation in brain_info.visual_observations:
+                    obs = observation[0]
+                    if obs.shape[2] == 3:
+                        self.im1.set_data(obs[:, :, :])
+                    else:
+                        grayscale_img_in_rgb = np.stack((obs[:, :, 0],) * 3, axis=-1)
+                        self.im1.set_data(grayscale_img_in_rgb)
+
+                plt.pause(0.2)
+
+                self.frame_count = 0
+
+        # -> brain_info.visual_observations
+        # 168 - visual_observation:
+        #    The sublist contains the observation data for a single ray. The list is composed of the following:
+        #    1. A one-hot encoding for detectable objects. For example, if detectableObjects.Length = n, the
+        #       first n elements of the sublist will be a one-hot encoding of the detectableObject that was hit, or
+        #       all zeroes otherwise.
+        #    2. The 'length' element of the sublist will be 1 if the ray missed everything, or 0 if it hit
+        #       something (detectable or not).
+        #    3. The 'length+1' element of the sublist will contain the normalised distance to the object hit.
+        # Example:
+        #    [0 0 1 0 0 0 | normalized_distance 0] * 7 angles * 3 angles subsets
+        # 1 - button state (bool)
+        # 3 int - agent velocity (on x, y and z)
+        # total: 172 values
 
         run_out = self.evaluate(brain_info)
         return ActionInfo(

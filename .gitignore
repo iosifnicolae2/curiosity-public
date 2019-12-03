@@ -2,7 +2,6 @@
 /UnityProject/[Tt]emp/
 /UnityProject/[Oo]bj/
 /UnityProject/[Bb]uild/
-/UnityProject/[Bb]uilds/
 /UnityProject/[Pp]ackages/
 /UnityProject/[Uu]nity[Pp]ackage[Mm]anager/
 /UnityProject/Assets/AssetStoreTools*
@@ -46,7 +45,6 @@
 # Builds
 *.apk
 *.unitypackage
-*.app
 *.exe
 *.x86_64
 *.x86
