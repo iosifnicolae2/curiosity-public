@@ -147,6 +147,21 @@ class TFPolicy(Policy):
 
                 self.frame_count = 0
 
+        # -> brain_info.visual_observations
+        # 168 - visual_observation:
+        #    The sublist contains the observation data for a single ray. The list is composed of the following:
+        #    1. A one-hot encoding for detectable objects. For example, if detectableObjects.Length = n, the
+        #       first n elements of the sublist will be a one-hot encoding of the detectableObject that was hit, or
+        #       all zeroes otherwise.
+        #    2. The 'length' element of the sublist will be 1 if the ray missed everything, or 0 if it hit
+        #       something (detectable or not).
+        #    3. The 'length+1' element of the sublist will contain the normalised distance to the object hit.
+        # Example:
+        #    [0 0 1 0 0 0 | normalized_distance 0] * 7 angles * 3 angles subsets
+        # 1 - button state (bool)
+        # 3 int - agent velocity (on x, y and z)
+        # total: 172 values
+
         run_out = self.evaluate(brain_info)
         return ActionInfo(
             action=run_out.get("action"),
