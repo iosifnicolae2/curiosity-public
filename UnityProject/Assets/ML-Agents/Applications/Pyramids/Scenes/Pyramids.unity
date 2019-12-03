@@ -1399,6 +1399,79 @@ Prefab:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114937736047215868, guid: bd804431e808a492bb5658bcd296e58e,
+        type: 2}
+      propertyPath: agentParameters.onDemandDecision
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4229386211436788, guid: bd804431e808a492bb5658bcd296e58e, type: 2}
+      propertyPath: m_RootOrder
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 4099134947212796, guid: bd804431e808a492bb5658bcd296e58e, type: 2}
+      propertyPath: m_RootOrder
+      value: 17
+      objectReference: {fileID: 0}
+    - target: {fileID: 4322711954484720, guid: bd804431e808a492bb5658bcd296e58e, type: 2}
+      propertyPath: m_RootOrder
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 4847261342046238, guid: bd804431e808a492bb5658bcd296e58e, type: 2}
+      propertyPath: m_RootOrder
+      value: 19
+      objectReference: {fileID: 0}
+    - target: {fileID: 4772617732387204, guid: bd804431e808a492bb5658bcd296e58e, type: 2}
+      propertyPath: m_RootOrder
+      value: 18
+      objectReference: {fileID: 0}
+    - target: {fileID: 4354274498933418, guid: bd804431e808a492bb5658bcd296e58e, type: 2}
+      propertyPath: m_RootOrder
+      value: 14
+      objectReference: {fileID: 0}
+    - target: {fileID: 54596704247224538, guid: bd804431e808a492bb5658bcd296e58e,
+        type: 2}
+      propertyPath: m_IsKinematic
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114399412043818042, guid: bd804431e808a492bb5658bcd296e58e,
+        type: 2}
+      propertyPath: m_UseHeuristic
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 54596704247224538, guid: bd804431e808a492bb5658bcd296e58e,
+        type: 2}
+      propertyPath: m_UseGravity
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 54596704247224538, guid: bd804431e808a492bb5658bcd296e58e,
+        type: 2}
+      propertyPath: m_CollisionDetection
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4518417139497368, guid: bd804431e808a492bb5658bcd296e58e, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 3.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 65345930959735878, guid: bd804431e808a492bb5658bcd296e58e,
+        type: 2}
+      propertyPath: m_IsTrigger
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114937736047215868, guid: bd804431e808a492bb5658bcd296e58e,
+        type: 2}
+      propertyPath: agentParameters.resetOnDone
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114399412043818042, guid: bd804431e808a492bb5658bcd296e58e,
+        type: 2}
+      propertyPath: m_BrainParameters.vectorObservationSize
+      value: 172
+      objectReference: {fileID: 0}
+    - target: {fileID: 114399412043818042, guid: bd804431e808a492bb5658bcd296e58e,
+        type: 2}
+      propertyPath: m_BrainParameters.numStackedVectorObservations
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: bd804431e808a492bb5658bcd296e58e, type: 2}
   m_IsPrefabParent: 0
