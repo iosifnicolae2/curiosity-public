@@ -215,7 +215,11 @@ def run_training(
         options.env_args,
     )
     if options.debug:
-        env_instance = env_factory(1)
+        worker_id = 1
+        if options.env_path is None:
+            worker_id = 0
+
+        env_instance = env_factory(worker_id)
         env = SimpleEnvManager(env_instance)
     else:
         env = SubprocessEnvManager(env_factory, options.num_envs)
