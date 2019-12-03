@@ -11,6 +11,7 @@ import numpy as np
 from typing import Any, Callable, Optional, List, NamedTuple
 
 from mlagents.envs.simple_env_manager import SimpleEnvManager
+from mlagents.trainers.global_variables import set_debug
 from mlagents.trainers.trainer_controller import TrainerController
 from mlagents.trainers.exception import TrainerError
 from mlagents.trainers.meta_curriculum import MetaCurriculum
@@ -214,6 +215,8 @@ def run_training(
         port,
         options.env_args,
     )
+    set_debug(options.debug)
+
     if options.debug:
         worker_id = 1
         if options.env_path is None:
