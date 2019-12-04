@@ -1,5 +1,5 @@
 default:
-    trainer: ppo
+    trainer: curiosity
     batch_size: 1024
     beta: 5.0e-3
     buffer_size: 10240
