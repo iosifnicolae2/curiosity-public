@@ -192,6 +192,7 @@ class TFPolicy(Policy):
         return run_out
 
     def fill_eval_dict(self, feed_dict, brain_info):
+        # Append visual_observations and vector_in to `feed_dict`
         for i, _ in enumerate(brain_info.visual_observations):
             feed_dict[self.model.visual_in[i]] = brain_info.visual_observations[i]
         if self.use_vec_obs:

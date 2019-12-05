@@ -1,7 +1,6 @@
 import yaml
 from typing import Any, Dict, TextIO
 
-from mlagents.trainers.curiosity_model.trainer import CuriosityTrainer
 from mlagents.trainers.meta_curriculum import MetaCurriculum
 from mlagents.envs.exception import UnityEnvironmentException
 from mlagents.trainers.trainer import Trainer
@@ -104,19 +103,6 @@ def initialize_trainer(
         )
     elif trainer_parameters["trainer"] == "ppo":
         trainer = PPOTrainer(
-            brain_parameters,
-            meta_curriculum.brains_to_curriculums[brain_name].min_lesson_length
-            if meta_curriculum
-            else 1,
-            trainer_parameters,
-            train_model,
-            load_model,
-            seed,
-            run_id,
-            multi_gpu,
-        )
-    elif trainer_parameters["trainer"] == "curiosity":
-        trainer = CuriosityTrainer(
             brain_parameters,
             meta_curriculum.brains_to_curriculums[brain_name].min_lesson_length
             if meta_curriculum
