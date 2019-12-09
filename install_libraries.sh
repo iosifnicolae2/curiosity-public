@@ -12,3 +12,9 @@ pip install -r requirements.txt
 brew install graphviz
 pip install graphviz
 pip install tfgraphviz
+
+cd gym-project || exit
+brew install cmake openmpi
+
+cd simple_gym_env || exit
+pip install -e .

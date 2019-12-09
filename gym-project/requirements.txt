@@ -1,2 +1,0 @@
-gym==0.15.4
-gym-minigrid==0.0.5
