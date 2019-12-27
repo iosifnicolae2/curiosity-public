@@ -1,6 +1,7 @@
 import logging
 from typing import Any, Dict, Type
 
+from mlagents.trainers.components.reward_signals.explorer.signal import ExplorationRewardSignal
 from mlagents.trainers.trainer import UnityTrainerException
 from mlagents.trainers.components.reward_signals import RewardSignal
 from mlagents.trainers.components.reward_signals.extrinsic.signal import (
@@ -19,6 +20,7 @@ logger = logging.getLogger("mlagents.trainers")
 NAME_TO_CLASS: Dict[str, Type[RewardSignal]] = {
     "extrinsic": ExtrinsicRewardSignal,
     "curiosity": CuriosityRewardSignal,
+    "exploration": ExplorationRewardSignal,
     "gail": GAILRewardSignal,
 }
 

@@ -41,6 +41,10 @@ Pyramids:
             strength: 0.02
             gamma: 0.99
             encoding_size: 256
+        exploration:
+            strength: 0.02
+            gamma: 0.99
+            encoding_size: 256
 
 VisualPyramids:
     time_horizon: 128
