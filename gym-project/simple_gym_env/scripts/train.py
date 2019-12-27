@@ -1,14 +1,27 @@
 import argparse
 import time
 import datetime
+
+import numpy
 import torch
 import torch_ac
 import tensorboardX
 import sys
 
+import matplotlib.pyplot as plt
+
 import utils
 from model import ACModel
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 # Parse arguments
 
@@ -16,9 +29,13 @@ parser = argparse.ArgumentParser()
 
 ## General parameters
 parser.add_argument("--algo", required=True,
-                    help="algorithm to use: a2c | ppo (REQUIRED)")
+                    help="algorithm to use: a2c | ppo  (REQUIRED)")
 parser.add_argument("--env", required=True,
                     help="name of the environment to train on (REQUIRED)")
+parser.add_argument("--visualise", type=str2bool, default=False,
+                    help="Render the first env at each step?")
+parser.add_argument("--show-camera-plot", default=False,
+                    help="Show a plot with the camera view")
 parser.add_argument("--model", default=None,
                     help="name of the model (default: {ENV}_{ALGO}_{TIME})")
 parser.add_argument("--seed", type=int, default=1,
@@ -31,13 +48,15 @@ parser.add_argument("--procs", type=int, default=16,
                     help="number of processes (default: 16)")
 parser.add_argument("--frames", type=int, default=10**7,
                     help="number of frames of training (default: 1e7)")
+parser.add_argument("--resume-training", default=False,
+                    help="do you want to resume the training?")
 
 ## Parameters for main algorithm
 parser.add_argument("--epochs", type=int, default=4,
                     help="number of epochs for PPO (default: 4)")
 parser.add_argument("--batch-size", type=int, default=256,
                     help="batch size for PPO (default: 256)")
-parser.add_argument("--frames-per-proc", type=int, default=None,
+parser.add_argument("--frames-per-proc", type=int, default=128,
                     help="number of frames per process before update (default: 5 for A2C and 128 for PPO)")
 parser.add_argument("--discount", type=float, default=0.99,
                     help="discount factor (default: 0.99)")
@@ -104,7 +123,10 @@ txt_logger.info("Environments loaded\n")
 # Load training status
 
 try:
-    status = utils.get_status(model_dir)
+    if args.resume_training:
+        status = utils.get_status(model_dir)
+    else:
+        status = {"num_frames": 0, "update": 0}
 except OSError:
     status = {"num_frames": 0, "update": 0}
 txt_logger.info("Training status loaded\n")
@@ -119,8 +141,10 @@ txt_logger.info("Observations preprocessor loaded")
 # Load model
 
 acmodel = ACModel(obs_space, envs[0].action_space, args.mem, args.text)
+
 if "model_state" in status:
     acmodel.load_state_dict(status["model_state"])
+
 acmodel.to(device)
 txt_logger.info("Model loaded\n")
 txt_logger.info("{}\n".format(acmodel))
@@ -147,6 +171,13 @@ txt_logger.info("Optimizer loaded\n")
 num_frames = status["num_frames"]
 update = status["update"]
 start_time = time.time()
+first_env = envs[0]
+
+imview = None
+if args.show_camera_plot:
+    ax1 = plt.subplot(1, 1, 1)
+    imview = ax1.imshow(numpy.zeros((128, 128, 3)))
+    plt.ion()
 
 while num_frames < args.frames:
     # Update model parameters
@@ -156,6 +187,19 @@ while num_frames < args.frames:
     logs2 = algo.update_parameters(exps)
     logs = {**logs1, **logs2}
     update_end_time = time.time()
+
+    if args.visualise:
+        renderer = first_env.render()
+        if not imview:
+            time.sleep(0.1)
+
+    if imview:
+        np_img = exps.obs.image[0].numpy()
+        # normalize
+        np_img = (np_img/np_img.max()) * 255
+        img = np_img.astype(numpy.uint8)
+        imview.set_data(img)
+        plt.pause(0.5)
 
     num_frames += logs["num_frames"]
     update += 1
@@ -175,11 +219,11 @@ while num_frames < args.frames:
         data += rreturn_per_episode.values()
         header += ["num_frames_" + key for key in num_frames_per_episode.keys()]
         data += num_frames_per_episode.values()
-        header += ["entropy", "value", "policy_loss", "value_loss", "grad_norm"]
-        data += [logs["entropy"], logs["value"], logs["policy_loss"], logs["value_loss"], logs["grad_norm"]]
+        header += ["entropy", "value", "policy_loss", "value_loss", "grad_norm", "exploratory_reward"]
+        data += [logs.get("entropy"), logs.get("value"), logs.get("policy_loss"), logs.get("value_loss"), logs.get("grad_norm"), logs.get("exploratory_reward")]
 
         txt_logger.info(
-            "U {} | F {:06} | FPS {:04.0f} | D {} | rR:μσmM {:.2f} {:.2f} {:.2f} {:.2f} | F:μσmM {:.1f} {:.1f} {} {} | H {:.3f} | V {:.3f} | pL {:.3f} | vL {:.3f} | ∇ {:.3f}"
+            "U {} | F {:06} | FPS {:04.0f} | D {} | rR:μσmM {:.2f} {:.2f} {:.2f} {:.2f} | F:μσmM {:.1f} {:.1f} {} {} | H {:.3f} | V {:.3f} | pL {:.3f} | vL {:.3f} | ∇ {:.3f} | exR {:.3f}"
             .format(*data))
 
         header += ["return_" + key for key in return_per_episode.keys()]
@@ -202,3 +246,5 @@ while num_frames < args.frames:
             status["vocab"] = preprocess_obss.vocab.vocab
         utils.save_status(status, model_dir)
         txt_logger.info("Status saved")
+
+print("Done")

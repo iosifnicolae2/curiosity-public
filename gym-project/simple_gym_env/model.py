@@ -16,7 +16,9 @@ def init_params(m):
 
 
 class ACModel(nn.Module, torch_ac.RecurrentACModel):
-    def __init__(self, obs_space, action_space, use_memory=False, use_text=False):
+    MEMORY = []
+
+    def __init__(self, obs_space, action_space, use_memory=True, use_text=False):
         super().__init__()
 
         # Decide which components are enabled
@@ -102,6 +104,27 @@ class ACModel(nn.Module, torch_ac.RecurrentACModel):
         value = x.squeeze(1)
 
         return dist, value, memory
+
+    def obs_image_preprocess(self, obs):
+        x = obs.image.transpose(1, 3).transpose(2, 3)
+        x = self.image_conv(x)
+        x = x.reshape(x.shape[0], -1)
+        return x
+
+    def add_memory(self, img):
+        img = self.preprocess_image_before_saving(img)
+        self.MEMORY.append(img)
+
+    def in_memory(self, img):
+        img = self.preprocess_image_before_saving(img)
+        memory_length = len(self.MEMORY)
+        if not memory_length:
+            return 0
+
+        return self.MEMORY.count(img)/memory_length
+
+    def preprocess_image_before_saving(self, img):
+        return ''.join(map(str, img.tolist()[0]))
 
     def _get_embed_text(self, text):
         _, hidden = self.text_rnn(self.word_embedding(text))

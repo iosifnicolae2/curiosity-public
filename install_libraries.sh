@@ -18,3 +18,6 @@ brew install cmake openmpi
 
 cd simple_gym_env || exit
 pip install -e .
+
+cd torch-ac || exit
+pip install -e .
