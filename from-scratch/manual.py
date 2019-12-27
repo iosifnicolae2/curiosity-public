@@ -28,7 +28,7 @@ def calculate_curiosity_reward(agent_observation):
 
 
 def get_action(previous_observation, available_actions):
-    
+
     # return available_actions.sample()
 
     # wait for a key press
@@ -84,11 +84,16 @@ def train(episodes=10, episode_steps=50000):
 
     CURIOSITY_REWARDS = []
 
+    fig = plt.figure(figsize=(8, 8))
     im1 = plt.subplot(2, 2, 1)
     im2 = plt.subplot(2, 2, 2)
     im3 = plt.subplot(2, 2, 3)
+
+    im1.title.set_text('Game view')
+
     image_plot_1 = im1.imshow(numpy.zeros((84, 84, 3)))
     plt.ion()
+    plt.show()
 
     for episode in range(episodes):
         observation = env.reset()
@@ -117,7 +122,11 @@ def train(episodes=10, episode_steps=50000):
             im2.plot(CURIOSITY_REWARDS)
             im3.clear()
             im3.scatter(list(get_agent_x_positions()), list(get_agent_z_positions()))
-            plt.pause(0.05)
+
+            im2.title.set_text('Curiosity reward')
+            im3.title.set_text('Exploration map')
+
+            plt.pause(0.01)
 
             if curiosity_reward < 0.002:
                 done = True
