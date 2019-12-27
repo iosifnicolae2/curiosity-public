@@ -1441,7 +1441,7 @@ Prefab:
     - target: {fileID: 54596704247224538, guid: bd804431e808a492bb5658bcd296e58e,
         type: 2}
       propertyPath: m_UseGravity
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 54596704247224538, guid: bd804431e808a492bb5658bcd296e58e,
         type: 2}
@@ -1450,7 +1450,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4518417139497368, guid: bd804431e808a492bb5658bcd296e58e, type: 2}
       propertyPath: m_LocalPosition.y
-      value: 3.4
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 65345930959735878, guid: bd804431e808a492bb5658bcd296e58e,
         type: 2}
@@ -1465,12 +1465,21 @@ Prefab:
     - target: {fileID: 114399412043818042, guid: bd804431e808a492bb5658bcd296e58e,
         type: 2}
       propertyPath: m_BrainParameters.vectorObservationSize
-      value: 172
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 114399412043818042, guid: bd804431e808a492bb5658bcd296e58e,
         type: 2}
       propertyPath: m_BrainParameters.numStackedVectorObservations
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 54596704247224538, guid: bd804431e808a492bb5658bcd296e58e,
+        type: 2}
+      propertyPath: m_Constraints
+      value: 112
+      objectReference: {fileID: 0}
+    - target: {fileID: 4330571258469162, guid: bd804431e808a492bb5658bcd296e58e, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 1.79
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: bd804431e808a492bb5658bcd296e58e, type: 2}

@@ -27,6 +27,7 @@ public class PyramidAgent : Agent
     {
         if (useVectorObs)
         {
+        /*
             const float rayDistance = 35f;
             float[] rayAngles = { 20f, 90f, 160f, 45f, 135f, 70f, 110f };
             float[] rayAngles1 = { 25f, 95f, 165f, 50f, 140f, 75f, 115f };
@@ -38,6 +39,9 @@ public class PyramidAgent : Agent
             AddVectorObs(m_RayPer.Perceive(rayDistance, rayAngles2, detectableObjects, 0f, 10f));
             AddVectorObs(m_SwitchLogic.GetState());
             AddVectorObs(transform.InverseTransformDirection(m_AgentRb.velocity));
+            */
+
+            AddVectorObs(transform.position);
         }
     }
 

@@ -10,7 +10,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>build001</string>
+	<string>unity-game</string>
 	<key>CFBundleGetInfoString</key>
 	<string>Unity Player version 2017.4.34f1 (121f18246307). (c) 2019 Unity Technologies ApS. All rights reserved.</string>
 	<key>CFBundleIconFile</key>
