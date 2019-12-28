@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using MLAgents;
@@ -13,6 +14,9 @@ public class PyramidAgent : Agent
     private PyramidSwitch m_SwitchLogic;
     public GameObject areaSwitch;
     public bool useVectorObs;
+    private List<String> MEMORY = new List<String>();
+    private const int POSITION_ROUNDING = 0;
+    private const int POSITION_DECIMAL_ROUNDING = -1;
 
     public override void InitializeAgent()
     {
@@ -70,9 +74,39 @@ public class PyramidAgent : Agent
         m_AgentRb.AddForce(dirToGo * 2f, ForceMode.VelocityChange);
     }
 
+    private float count_position_occurrences(String current_position)
+    {
+        int occurences = 0;
+        foreach (String m in MEMORY)
+        {
+            if (m == current_position) {
+                occurences++;
+            }
+        }
+
+        return occurences;
+    }
+
     public override void AgentAction(float[] vectorAction, string textAction)
     {
-        AddReward(-1f / agentParameters.maxStep);
+        // Calculate exploration reward
+        float exploration_reward = 0;
+        String current_position = String.Format(
+            "{0}:{1}",
+            Math.Round(transform.position.x * Math.Pow(10, POSITION_DECIMAL_ROUNDING), POSITION_ROUNDING),
+            Math.Round(transform.position.z * Math.Pow(10, POSITION_DECIMAL_ROUNDING), POSITION_ROUNDING)
+        );
+        float position_occurrences = count_position_occurrences(current_position);
+
+        MEMORY.Add(current_position);
+
+        if(position_occurrences > 0){
+            exploration_reward += 0.1f / position_occurrences;
+        } else {
+            exploration_reward += 1;
+        }
+
+        AddReward(exploration_reward);
         MoveAgent(vectorAction);
     }
 
@@ -119,11 +153,14 @@ public class PyramidAgent : Agent
 
     private void OnCollisionEnter(Collision collision)
     {
+
+        /*
         if (collision.gameObject.CompareTag("goal"))
         {
             SetReward(2f);
             Done();
         }
+        */
     }
 
     public override void AgentOnDone()
