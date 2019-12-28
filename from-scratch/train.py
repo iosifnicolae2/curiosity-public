@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-import matplotlib.pyplot as plt
 import numpy
+import yaml
+
+import matplotlib.pyplot as plt
 
 from getkey import getkey, keys
 from gym_unity.envs import UnityEnv
@@ -31,6 +33,9 @@ class Agent:
             return 2
 
         return 0
+
+    def analyze_action_output(self, observation, reward, done, info):
+        print("Reward: {}".format(reward))
 
     @staticmethod
     def position(agent_info):
@@ -80,10 +85,12 @@ class Stats:
 
 
 class Trainer:
-    def __init__(self, env):
+    def __init__(self, env, enable_stats=True):
         self.env = env
         self.agent = Agent(self.env)
-        self.stats = Stats()
+        self.stats = None
+        if enable_stats:
+            self.stats = Stats()
 
     def train(self, episodes=10, episode_steps=50000):
         for episode in range(episodes):
@@ -94,17 +101,29 @@ class Trainer:
 
                 observation, reward, done, info = env.step(action)
 
-                self.stats.process_stats(self.agent, observation, reward, done, info, reward)
+                self.agent.analyze_action_output(observation, reward, done, info)
+
+                if self.stats:
+                    self.stats.process_stats(self.agent, observation, reward, done, info, reward)
 
                 if reward < 0.002 or done:
                     break
 
 
 if __name__ == '__main__':
-    env = UnityEnv("unity-game.app", 0, use_visual=True, uint8_visual=True, no_graphics=False)
+    with open(r'config.yaml') as file:
+        config = yaml.load(file, Loader=yaml.FullLoader)
+
+    env = UnityEnv(
+        config["env_filename"],
+        config["env_worker_id"],
+        use_visual=True,
+        uint8_visual=True,
+        no_graphics=False,
+    )
     try:
-        trainer = Trainer(env)
-        trainer.train(episode_steps=50)
+        trainer = Trainer(env, enable_stats=config["enable_stats"])
+        trainer.train(episodes=config["episodes"], episode_steps=config["episode_steps"])
     except Exception:
         env.close()
         raise
