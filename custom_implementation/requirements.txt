@@ -1,0 +1,10 @@
+getkey
+pyyaml
+torch
+NumPy
+gym
+pillow<7
+torchvision
+gym-unity
+mlagents
+mlagents-envs

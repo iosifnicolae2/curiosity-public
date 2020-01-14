@@ -1,5 +1,0 @@
-env_filename: "unity-game.app"
-env_worker_id: 1
-enable_stats: False
-episodes: 10
-episode_steps: 50000

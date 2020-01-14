@@ -16,7 +16,7 @@ public class PyramidAgent : Agent
     public bool useVectorObs;
     private List<String> MEMORY = new List<String>();
     private const int POSITION_ROUNDING = 0;
-    private const int POSITION_DECIMAL_ROUNDING = -1;
+    private const int POSITION_DECIMAL_ROUNDING = 0;
 
     public override void InitializeAgent()
     {
@@ -149,6 +149,8 @@ public class PyramidAgent : Agent
         m_MyArea.CreateStonePyramid(1, items[6]);
         m_MyArea.CreateStonePyramid(1, items[7]);
         m_MyArea.CreateStonePyramid(1, items[8]);
+
+        MEMORY.Clear();
     }
 
     private void OnCollisionEnter(Collision collision)
