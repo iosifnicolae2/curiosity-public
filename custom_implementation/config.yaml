@@ -1,7 +1,7 @@
 env_filename: "unity-game.app"
 env_worker_id: 1
 # Available operations: manual, train, evaluate
-operations: "train"
+operations: "clean, train"
 enable_stats: False
 model_path: "./saved_models/model_episode_246.pth"
 
@@ -10,7 +10,7 @@ action_dim: 4
 vector_observation_dim: 3
 
 # Memory samples
-memory_samples: 50
+memory_samples: 20
 
 render: False
 # stop training if avg_reward > solved_reward
@@ -24,9 +24,9 @@ max_episodes: 5000
 # max timesteps in one episode
 max_timesteps: 300
 # number of variables in hidden layer
-n_latent_var: 10
+n_latent_var: 5
 # update policy every n timesteps
-update_timestep: 50
+update_timestep: 20
 lr: 0.002
 betas_start: 0.9
 betas_end: 0.999

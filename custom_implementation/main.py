@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from getkey import getkey, keys
 from gym_unity.envs import UnityEnv
 
-from custom_implementation.models import Memory, PPO
+from models import Memory, PPO
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -282,6 +282,9 @@ if __name__ == '__main__':
         )
         operations = config.operations
 
+        if len(config.model_path) > 0 and 'clean' not in operations:
+            trainer.load_model(config.model_path)
+
         if 'manual' in operations:
             trainer.manual_control()
 
@@ -289,7 +292,6 @@ if __name__ == '__main__':
             trainer.train()
 
         if 'evaluate' in operations:
-            trainer.load_model(config.model_path)
             trainer.evaluate()
 
     except Exception:
