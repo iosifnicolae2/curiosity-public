@@ -1,0 +1,39 @@
+env_filename: "unity-game.app"
+env_worker_id: 1
+# Available operations: manual, train, evaluate
+operations: "clean, train"
+enable_stats: False
+model_path: "./saved_models/model_episode_246.pth"
+
+# PPO config
+action_dim: 4
+vector_observation_dim: 3
+
+# Memory samples
+memory_samples: 20
+
+render: False
+# stop training if avg_reward > solved_reward
+solved_reward: 500
+# print avg reward in the interval
+log_interval_timestamps: 10
+# print avg reward in the interval
+log_interval: 1
+# max training episodes
+max_episodes: 5000
+# max timesteps in one episode
+max_timesteps: 300
+# number of variables in hidden layer
+n_latent_var: 5
+# update policy every n timesteps
+update_timestep: 20
+lr: 0.002
+betas_start: 0.9
+betas_end: 0.999
+# discount factor
+gamma: 0.99
+# update policy for K epochs
+K_epochs: 4
+# clip parameter for PPO
+eps_clip: 0.2
+random_seed: 1000

@@ -16,10 +16,8 @@ The scope of the project is to train an agent to learn new things about an envir
 ## Start training
 - create a `venv` environment using Python 3
 ```bash
-./install_libraries.sh
-mlagents-learn config-ml-agents/trainer_config.yaml --run-id=run-01 --train
+cd custom_implementation
+pip install -r requirements.txt
+python main.py
 ```
-- start the `Pyaramids` scene from Unity
-- save the generated model (`*.nn` file) in `UnityProject/Assets/ML-Agents/Applications/Pyramids/TFModels`
-- then configure the  agent to use the new model
 
