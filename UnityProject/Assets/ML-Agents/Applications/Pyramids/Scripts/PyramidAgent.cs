@@ -87,7 +87,7 @@ public class PyramidAgent : Agent
         return occurences;
     }
 
-    public override void AgentAction(float[] vectorAction, string textAction)
+    public override void AgentAction(float[] vectorAction)
     {
         // Calculate exploration reward
         float exploration_reward = 0;
