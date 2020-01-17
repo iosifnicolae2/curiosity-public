@@ -234,3 +234,4 @@ tmp/*
 output/
 UnityProject/csharp_timers.json
 UnityProject-copy/*
+custom_implementation/csharp_timers.json
