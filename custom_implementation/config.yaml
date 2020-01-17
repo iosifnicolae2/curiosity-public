@@ -1,12 +1,17 @@
 env_filename: "unity-game.app"
 env_worker_id: 1
 # Available operations: manual, train, evaluate
-operations: "manual"
-enable_stats: True
-model_path: "./model_episode_380.pth"
+operations: "train"
+enable_stats: False
+model_path: "./saved_models/model_episode_246.pth"
 
 # PPO config
 action_dim: 4
+vector_observation_dim: 3
+
+# Memory samples
+memory_samples: 50
+
 render: False
 # stop training if avg_reward > solved_reward
 solved_reward: 500
@@ -21,7 +26,7 @@ max_timesteps: 300
 # number of variables in hidden layer
 n_latent_var: 10
 # update policy every n timesteps
-update_timestep: 3
+update_timestep: 50
 lr: 0.002
 betas_start: 0.9
 betas_end: 0.999

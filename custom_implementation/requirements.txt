@@ -1,6 +1,6 @@
 getkey
 pyyaml
-torch
+torch==1.4.0
 NumPy
 gym
 pillow<7

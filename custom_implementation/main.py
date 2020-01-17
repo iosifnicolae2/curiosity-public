@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from collections import namedtuple
+
 import torch
 import numpy
 import yaml
@@ -9,7 +11,6 @@ from getkey import getkey, keys
 from gym_unity.envs import UnityEnv
 
 from custom_implementation.models import Memory, PPO
-
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -40,7 +41,7 @@ class ManualControlAgent:
         return 0
 
     def analyze_action_output(self, observation, reward, done, info):
-        # print("Reward: {}".format(reward))
+        print("Reward: {}".format(reward))
         pass
 
     @staticmethod
@@ -70,9 +71,9 @@ class Stats:
         plt.ion()
         plt.show()
 
-    def process_stats(self, observation, reward, done, info, curiosity_reward):
+    def process_stats(self, observation, reward, done, info):
         # Update exploration rewards
-        self.LAST_EXPLORATION_REWARDS.append(curiosity_reward)
+        self.LAST_EXPLORATION_REWARDS.append(reward)
         self.LAST_EXPLORATION_REWARDS = self.LAST_EXPLORATION_REWARDS[-100:]
 
         # Update visualisation
@@ -86,17 +87,17 @@ class Stats:
         self.ax2.plot(self.LAST_EXPLORATION_REWARDS)
 
         # self.ax3.clear()
-        x, _, z = (*info['brain_info'].vector_observations[0],)
+        x, _, z = (*info['batched_step_result'].obs[3][0],)
         self.ax3.scatter(x, z)
 
         self.ax2.title.set_text('Exploration reward')
         # self.ax3.title.set_text('Exploration map')
 
-        if len(observation) > 1 and observation[1].shape == (256, 256, 3):
-            self.im2.set_data(observation[1][:, :, :])
+        if len(observation) > 0 and observation[0].shape == (84, 84, 3):
+            self.im1.set_data(observation[0][:, :, :])
 
-        if len(observation) > 1 and observation[1].shape == (256, 256, 1):
-            self.im2.set_data(observation[1][:, :, 0])
+        if len(observation) > 1 and observation[1].shape == (84, 84, 3):
+            self.im2.set_data(observation[1][:, :, :])
 
         self.fig.canvas.draw_idle()
         plt.pause(0.05)
@@ -106,66 +107,24 @@ class Trainer:
     def __init__(
             self,
             env,
-            action_dim=4,
-            render=False,
-            solved_reward=230,  # stop training if avg_reward > solved_reward
-            log_interval_timestamps=20,  # print avg reward in the interval
-            log_interval=20,  # print avg reward in the interval
-            max_episodes=50000,  # max training episodes
-            max_timesteps=300,  # max timesteps in one episode
-            n_latent_var=64,  # number of variables in hidden layer
-            update_timestep=2000,  # update policy every n timesteps
-            lr=0.002,
-            betas=(0.9, 0.999),
-            gamma=0.99,  # discount factor
-            K_epochs=4,  # update policy for K epochs
-            eps_clip=0.2,  # clip parameter for PPO
-            random_seed=None,
-            enable_stats=True,
+            config,
     ):
         self.env = env
         self.stats = None
-        if enable_stats:
+        if config.enable_stats:
             self.stats = Stats()
 
         # Model hyperparams
-        self.action_dim = action_dim
-        self.render = render
-        self.solved_reward = solved_reward
-        self.log_interval_timestamps = log_interval_timestamps
-        self.log_interval = log_interval
-        self.max_episodes = max_episodes
-        self.max_timesteps = max_timesteps
-        self.n_latent_var = n_latent_var
-        self.update_timestep = update_timestep
-        self.lr = lr
-        self.betas = betas
-        self.gamma = gamma
-        self.K_epochs = K_epochs
-        self.eps_clip = eps_clip
-        self.random_seed = random_seed
-
-        self.state_dim = env.observation_space.shape
-        self.vector_state_dim = 3  # TODO, we might need to find a better way to calculate this
+        self.config = config
 
         #############################################
 
-        if random_seed:
-            torch.manual_seed(random_seed)
-            env.seed(random_seed)
+        if config.random_seed:
+            torch.manual_seed(config.random_seed)
+            env.seed(config.random_seed)
 
-        self.memory = Memory()
-        self.ppo = PPO(
-            self.state_dim,
-            self.vector_state_dim,
-            self.action_dim,
-            self.n_latent_var,
-            self.lr,
-            self.betas,
-            self.gamma,
-            self.K_epochs,
-            self.eps_clip,
-        )
+        self.memory = Memory(config)
+        self.ppo = PPO(config)
 
     def train(self):
         # logging variables
@@ -174,35 +133,37 @@ class Trainer:
         timestep = 0
 
         # training loop
-        for i_episode in range(1, self.max_episodes + 1):
+        for i_episode in range(1, self.config.max_episodes + 1):
             state = env.reset()
-            vector_state = [0, 0, 0]
-            for t in range(self.max_timesteps):
+            reward, done, info, action, action_log_prob = 0, False, None, None, None
+            t = 0
+
+            for t in range(self.config.max_timesteps):
                 timestep += 1
 
+                # Save previous experience
+                self.memory.save_signals(state, reward, done, info, action, action_log_prob)
+
                 # Running policy_old:
-                action = self.ppo.policy_old.act(state, vector_state, self.memory)
+                action, action_log_prob = self.ppo.policy_old.act(self.memory)
+
                 state, reward, done, info = env.step(action)
-                vector_state = info['brain_info'].vector_observations[0]
-                # Saving reward and is_terminal:
-                self.memory.rewards.append(reward)
-                self.memory.is_terminals.append(done)
 
                 if self.stats:
-                    self.stats.process_stats(state, reward, done, info, reward)
+                    self.stats.process_stats(state, reward, done, info)
 
                 # update if its time
-                if timestep % self.update_timestep == 0:
+                if timestep % self.config.update_timestep == 0:
                     self.ppo.update(self.memory)
                     self.memory.clear_memory()
                     timestep = 0
 
                 running_reward += reward
 
-                if t % self.log_interval_timestamps == 0:
+                if t % self.config.log_interval_timestamps == 0:
                     print(running_reward)
 
-                if self.render:
+                if self.config.render:
                     env.render()
                 if done:
                     break
@@ -210,25 +171,24 @@ class Trainer:
             avg_length += t
             print(running_reward)
             # stop training if avg_reward > solved_reward
-            if running_reward > (self.log_interval * self.solved_reward):
+            if running_reward > (self.config.log_interval * self.config.solved_reward):
                 print("########## Solved! ##########")
-                torch.save(self.ppo.policy.state_dict(), './model_final.pth')
+                torch.save(self.ppo.policy_old.state_dict(), './model_final.pth')
                 break
 
             # logging
-            if i_episode % self.log_interval == 0:
-                avg_length = int(avg_length / self.log_interval)
-                running_reward = int((running_reward / self.log_interval))
+            if i_episode % self.config.log_interval == 0:
+                avg_length = int(avg_length / self.config.log_interval)
+                running_reward = int((running_reward / self.config.log_interval))
 
                 print('Episode {} \t avg length: {} \t reward: {}'.format(i_episode, avg_length, running_reward))
 
-                torch.save(self.ppo.policy.state_dict(), './model_episode_{}.pth'.format(i_episode))
+                torch.save(self.ppo.policy_old.state_dict(), './saved_models/model_episode_{}.pth'.format(i_episode))
 
                 running_reward = 0
                 avg_length = 0
 
     def manual_control(self, episodes=10, episode_steps=50000):
-
         agent = ManualControlAgent(self.env)
         for episode in range(episodes):
             observation = env.reset()
@@ -236,18 +196,18 @@ class Trainer:
             for step in range(episode_steps):
                 action = agent.get_action(observation)
 
-                observation, reward, done, info = env.step(action)
+                observation, reward, done, info = env.step([action])
 
                 agent.analyze_action_output(observation, reward, done, info)
 
                 if self.stats:
-                    self.stats.process_stats(observation, reward, done, info, reward)
+                    self.stats.process_stats(observation, reward, done, info)
 
                 if reward < 0.002 or done:
                     break
 
     def load_model(self, path):
-        self.ppo.policy.load_state_dict(torch.load(path))
+        self.ppo.policy_old.load_state_dict(torch.load(path))
 
     def evaluate(self):
         # logging variables
@@ -256,39 +216,43 @@ class Trainer:
         timestep = 0
 
         # training loop
-        for i_episode in range(1, self.max_episodes + 1):
+        for i_episode in range(1, self.config.max_episodes + 1):
             state = env.reset()
-            for t in range(self.max_timesteps):
+            reward, done, info, action, action_log_prob = 0, False, None, None, None
+            t = 0
+
+            for t in range(self.config.max_timesteps):
                 timestep += 1
 
+                # Save previous experience
+                self.memory.save_signals(state, reward, done, info, action, action_log_prob)
+
                 # Running policy_old:
-                action = self.ppo.policy_old.act(state, self.memory)
+                action, action_log_prob = self.ppo.policy_old.act(self.memory)
+
                 state, reward, done, info = env.step(action)
 
-                # Saving reward and is_terminal:
-                self.memory.rewards.append(reward)
-                self.memory.is_terminals.append(done)
-
                 if self.stats:
-                    self.stats.process_stats(state, reward, done, info, reward)
+                    self.stats.process_stats(state, reward, done, info)
 
                 running_reward += reward
-                if self.render:
+
+                if t % self.config.log_interval_timestamps == 0:
+                    print(running_reward)
+
+                if self.config.render:
                     env.render()
                 if done:
                     break
 
             avg_length += t
-            print(running_reward)
 
             # logging
-            if i_episode % self.log_interval == 0:
-                avg_length = int(avg_length / self.log_interval)
-                running_reward = int((running_reward / self.log_interval))
+            if i_episode % self.config.log_interval == 0:
+                avg_length = int(avg_length / self.config.log_interval)
+                running_reward = int((running_reward / self.config.log_interval))
 
                 print('Episode {} \t avg length: {} \t reward: {}'.format(i_episode, avg_length, running_reward))
-
-                torch.save(self.ppo.policy.state_dict(), './model_episode_{}.pth'.format(i_episode))
 
                 running_reward = 0
                 avg_length = 0
@@ -298,9 +262,14 @@ if __name__ == '__main__':
     with open(r'config.yaml') as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
 
+    config = namedtuple(
+        'Struct',
+        config.keys(),
+    )(*config.values())
+
     env = UnityEnv(
-        config["env_filename"],
-        config["env_worker_id"],
+        config.env_filename,
+        config.env_worker_id,
         use_visual=True,
         uint8_visual=True,
         allow_multiple_visual_obs=True,
@@ -309,24 +278,9 @@ if __name__ == '__main__':
     try:
         trainer = Trainer(
             env,
-            action_dim=config["action_dim"],
-            render=config["render"],
-            solved_reward=config["solved_reward"],  # stop training if avg_reward > solved_reward
-            log_interval_timestamps=config["log_interval_timestamps"],  # print avg reward in the interval
-            log_interval=config["log_interval"],  # print avg reward in the interval
-            max_episodes=config["max_episodes"],  # max training episodes
-            max_timesteps=config["max_timesteps"],  # max timesteps in one episode
-            n_latent_var=config["n_latent_var"],  # number of variables in hidden layer
-            update_timestep=config["update_timestep"],  # update policy every n timesteps
-            lr=config["lr"],
-            betas=(config["betas_start"], config["betas_end"]),
-            gamma=config["gamma"],  # discount factor
-            K_epochs=config["K_epochs"],  # update policy for K epochs
-            eps_clip=config["eps_clip"],  # clip parameter for PPO
-            random_seed=config["random_seed"],
-            enable_stats=config["enable_stats"],
+            config
         )
-        operations = config["operations"]
+        operations = config.operations
 
         if 'manual' in operations:
             trainer.manual_control()
@@ -335,7 +289,7 @@ if __name__ == '__main__':
             trainer.train()
 
         if 'evaluate' in operations:
-            trainer.load_model(config["model_path"])
+            trainer.load_model(config.model_path)
             trainer.evaluate()
 
     except Exception:
