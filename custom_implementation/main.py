@@ -128,6 +128,7 @@ class Trainer:
 
     def train(self):
         # logging variables
+        episode_reward = 0
         running_reward = 0
         avg_length = 0
         timestep = 0
@@ -135,6 +136,8 @@ class Trainer:
         # training loop
         for i_episode in range(1, self.config.max_episodes + 1):
             state = env.reset()
+            self.memory.clear_memory()
+
             reward, done, info, action, action_log_prob = 0, False, None, None, None
             t = 0
 
@@ -155,13 +158,14 @@ class Trainer:
                 # update if its time
                 if timestep % self.config.update_timestep == 0:
                     self.ppo.update(self.memory)
-                    self.memory.clear_memory()
                     timestep = 0
 
                 running_reward += reward
+                episode_reward += reward
 
                 if t % self.config.log_interval_timestamps == 0:
                     print(running_reward)
+                    running_reward = 0
 
                 if self.config.render:
                     env.render()
@@ -169,9 +173,8 @@ class Trainer:
                     break
 
             avg_length += t
-            print(running_reward)
             # stop training if avg_reward > solved_reward
-            if running_reward > (self.config.log_interval * self.config.solved_reward):
+            if episode_reward > self.config.solved_reward:
                 print("########## Solved! ##########")
                 torch.save(self.ppo.policy_old.state_dict(), './model_final.pth')
                 break
@@ -179,12 +182,12 @@ class Trainer:
             # logging
             if i_episode % self.config.log_interval == 0:
                 avg_length = int(avg_length / self.config.log_interval)
-                running_reward = int((running_reward / self.config.log_interval))
 
-                print('Episode {} \t avg length: {} \t reward: {}'.format(i_episode, avg_length, running_reward))
+                print('Episode {} \t avg length: {} \t episode_reward: {}'.format(i_episode, avg_length, episode_reward))
 
                 torch.save(self.ppo.policy_old.state_dict(), './saved_models/model_episode_{}.pth'.format(i_episode))
 
+                episode_reward = 0
                 running_reward = 0
                 avg_length = 0
 
@@ -211,6 +214,7 @@ class Trainer:
 
     def evaluate(self):
         # logging variables
+        total_reward = 0
         running_reward = 0
         avg_length = 0
         timestep = 0
@@ -220,6 +224,7 @@ class Trainer:
             state = env.reset()
             reward, done, info, action, action_log_prob = 0, False, None, None, None
             t = 0
+            total_reward = 0
 
             for t in range(self.config.max_timesteps):
                 timestep += 1
@@ -239,6 +244,7 @@ class Trainer:
 
                 if t % self.config.log_interval_timestamps == 0:
                     print(running_reward)
+                    running_reward = 0
 
                 if self.config.render:
                     env.render()
@@ -254,6 +260,7 @@ class Trainer:
 
                 print('Episode {} \t avg length: {} \t reward: {}'.format(i_episode, avg_length, running_reward))
 
+                total_reward = 0
                 running_reward = 0
                 avg_length = 0
 

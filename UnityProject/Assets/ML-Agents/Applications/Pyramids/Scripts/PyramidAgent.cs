@@ -16,7 +16,7 @@ public class PyramidAgent : Agent
     public bool useVectorObs;
     private List<String> MEMORY = new List<String>();
     private const int POSITION_ROUNDING = 0;
-    private const int POSITION_DECIMAL_ROUNDING = 0;
+    private const int POSITION_DECIMAL_ROUNDING = 1;
 
     public override void InitializeAgent()
     {
@@ -93,8 +93,8 @@ public class PyramidAgent : Agent
         float exploration_reward = 0;
         String current_position = String.Format(
             "{0}:{1}",
-            Math.Round(transform.position.x * Math.Pow(10, POSITION_DECIMAL_ROUNDING), POSITION_ROUNDING),
-            Math.Round(transform.position.z * Math.Pow(10, POSITION_DECIMAL_ROUNDING), POSITION_ROUNDING)
+            Math.Round(transform.position.x * Math.Pow(0.5, POSITION_DECIMAL_ROUNDING), POSITION_ROUNDING),
+            Math.Round(transform.position.z * Math.Pow(0.5, POSITION_DECIMAL_ROUNDING), POSITION_ROUNDING)
         );
         float position_occurrences = count_position_occurrences(current_position);
 

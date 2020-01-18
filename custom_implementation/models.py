@@ -32,13 +32,19 @@ class Memory:
         self.is_terminals = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.bool)
 
     def save_signals(self, state, reward, done, info, action, action_log_prob):
-        push_to_tensor(self.rewards, torch.tensor(reward, dtype=torch.float)) if reward is not None else None
-        push_to_tensor(self.is_terminals, torch.tensor(done, dtype=torch.bool)) if done is not None else None
-        push_to_tensor(self.states, self.preprocess_images(state).float()) if state is not None else None
-        push_to_tensor(self.logprobs, action_log_prob.float()) if action_log_prob is not None else None
-        agent_position = info['batched_step_result'].obs[3][0] if info is not None else None
-        push_to_tensor(self.vector_observations, torch.tensor(agent_position, dtype=torch.float)) if agent_position is not None else None
-        push_to_tensor(self.actions, torch.tensor(action, dtype=torch.int)) if action is not None else None
+        if reward:
+            self.rewards = push_to_tensor(self.rewards, torch.tensor(reward, dtype=torch.float))
+        if done:
+            self.is_terminals = push_to_tensor(self.is_terminals, torch.tensor(done, dtype=torch.bool))
+        if state:
+            self.states = push_to_tensor(self.states, self.preprocess_images(state).float())
+        if action_log_prob:
+            self.logprobs = push_to_tensor(self.logprobs, action_log_prob.float())
+        if info:
+            agent_position = info['batched_step_result'].obs[3][0]
+            self.vector_observations = push_to_tensor(self.vector_observations, torch.tensor(agent_position, dtype=torch.float))
+        if action:
+            self.actions = push_to_tensor(self.actions, torch.tensor(action, dtype=torch.int))
 
     def to(self, device):
         self.actions = self.actions.to(device)
@@ -275,7 +281,9 @@ class PPO:
             advantages = rewards - state_values.detach()
             surr1 = ratios * advantages
             surr2 = torch.clamp(ratios, 1 - self.config.eps_clip, 1 + self.config.eps_clip) * advantages
-            loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards) - 0.01 * dist_entropy
+
+            rewards_sum = torch.sum(rewards)
+            loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards_sum) - 0.01 * dist_entropy
 
             # take gradient step
             self.optimizer.zero_grad()
