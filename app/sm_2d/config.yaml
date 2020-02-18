@@ -27,7 +27,7 @@ solved_reward: 500
 
 # Training length
 # max training episodes
-max_episodes: 10000
+max_episodes: 1000000
 # max timesteps in one episode
 max_timesteps: 500
 

@@ -160,6 +160,8 @@ class Trainer:
         # training loop
         remaining_episodes = self.config.max_episodes
         episodes_from_last_update = 0
+        processed_episodes = 0
+        total_reward = 0
         while remaining_episodes > 0:
             threads_num = self.config.threads
             threads = []
@@ -173,7 +175,8 @@ class Trainer:
                 t.start()
 
             for t in threads:
-                memory = t.join()
+                memory, episode_reward = t.join()
+                total_reward += episode_reward
 
                 self.ppo.update(memory)
 
@@ -185,7 +188,8 @@ class Trainer:
                 episodes_from_last_update += threads_num
 
             remaining_episodes -= threads_num
-            print("remaining_episodes: {}".format(remaining_episodes))
+            processed_episodes += threads_num
+            print("remaining_episodes: {}, average_reward: {}".format(remaining_episodes, total_reward/processed_episodes))
 
         self.save_policy()
 
@@ -218,7 +222,7 @@ class Trainer:
                 duration = (datetime.now() - start_date).total_seconds()
                 frames_per_sec = total_steps/duration
                 print('DONE. Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
-                return memory
+                return memory, episode_reward
 
             if self.config.render:
                 env.render()
@@ -229,7 +233,7 @@ class Trainer:
 
         print('Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
 
-        return memory
+        return memory, episode_reward
 
     def manual_control(self, episodes=10, episode_steps=50000):
         env = self.get_a_new_env()
@@ -266,8 +270,12 @@ class Trainer:
         # training loop
         remaining_episodes = self.config.max_episodes
         episodes_from_last_update = 0
+        total_reward = 0
+        processed_episodes = 0
         while remaining_episodes > 0:
-            memory = self.collect_experiences()
+            memory, episode_reward = self.collect_experiences()
+            total_reward += episode_reward
+            processed_episodes += 1
             self.ppo.update(memory)
 
             if episodes_from_last_update > self.config.save_policy_every_x_episodes:
@@ -278,7 +286,7 @@ class Trainer:
                 episodes_from_last_update += 1
 
             remaining_episodes -= 1
-            print("remaining_episodes: {}".format(remaining_episodes))
+            print("remaining_episodes: {}, average_reward: {}".format(remaining_episodes, total_reward/processed_episodes))
 
         self.save_policy()
 
