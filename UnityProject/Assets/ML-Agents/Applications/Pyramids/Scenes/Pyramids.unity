@@ -1824,6 +1824,11 @@ PrefabInstance:
       propertyPath: m_BrainParameters.numStackedVectorObservations
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114399412043818042, guid: bd804431e808a492bb5658bcd296e58e,
+        type: 3}
+      propertyPath: m_BehaviorType
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 114882773008046678, guid: bd804431e808a492bb5658bcd296e58e,
         type: 3}
       propertyPath: m_Enabled

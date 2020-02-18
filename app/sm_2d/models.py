@@ -8,7 +8,7 @@ from torch.distributions import Categorical
 import torchvision.models as models
 import torchvision.transforms as transforms
 
-from utils import push_to_tensor
+from app.utils import push_to_tensor
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -24,7 +24,8 @@ class Memory:
 
     def initialize_data(self):
         self.actions = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.int)
-        self.states = torch.zeros(1, self.config.memory_samples, 2, 3, 84, 84, dtype=torch.float)
+        self.states = torch.zeros(1, self.config.memory_samples, 1, 3, self.config.image_width, self.config.image_height, dtype=torch.float)
+        # self.states = torch.zeros(1, self.config.memory_samples, 2, 3, self.config.image_width, self.config.image_height, dtype=torch.float)
         self.logprobs = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.float)
         self.vector_observations = torch.zeros(1, self.config.memory_samples, self.config.vector_observation_dim,
                                                dtype=torch.float)
@@ -36,7 +37,7 @@ class Memory:
             self.rewards = push_to_tensor(self.rewards, torch.tensor(reward, dtype=torch.float))
         if done:
             self.is_terminals = push_to_tensor(self.is_terminals, torch.tensor(done, dtype=torch.bool))
-        if state:
+        if state is not None:
             self.states = push_to_tensor(self.states, self.preprocess_images(state).float())
         if action_log_prob:
             self.logprobs = push_to_tensor(self.logprobs, action_log_prob.float())
@@ -59,9 +60,9 @@ class Memory:
     def last_state_first_camera(self):
         return self.states[:, -1, 0]
 
-    @property
-    def last_state_second_camera(self):
-        return self.states[:, -1, 1]
+    # @property
+    # def last_state_second_camera(self):
+    #     return self.states[:, -1, 1]
 
     @property
     def latest_vector_observation(self):
@@ -76,20 +77,14 @@ class Memory:
         return self.actions[:, -1]
 
     @staticmethod
-    def preprocess_images(images):
-        processed_images = None
-        for img in images:
-            processed_image = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ])(Image.fromarray(img)).unsqueeze(0)
-
-            if processed_images is None:
-                processed_images = processed_image
-            else:
-                processed_images = torch.cat((processed_images, processed_image), 0)
-
-        return processed_images
+    def preprocess_images(output_img):
+        img = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])(output_img)
+        # torch.Size([1, 50, 1, 3, 84, 84])
+        processed_images = img.unsqueeze_(0)
+        return processed_images.unsqueeze_(0)
 
 
 class ActorModel(nn.Module):
@@ -104,12 +99,12 @@ class ActorModel(nn.Module):
             num_classes=60,
         )
 
-        self.conv_layers2 = models.DenseNet(
-            growth_rate=32,
-            block_config=(3, 6, 4),
-            num_init_features=64,
-            num_classes=60,
-        )
+        # self.conv_layers2 = models.DenseNet(
+        #     growth_rate=32,
+        #     block_config=(3, 6, 4),
+        #     num_init_features=64,
+        #     num_classes=60,
+        # )
 
         self.old_vector_observations_layers = nn.Sequential(
             nn.Linear(self.config.vector_observation_dim * (self.config.memory_samples - 1), self.config.n_latent_var),
@@ -124,25 +119,32 @@ class ActorModel(nn.Module):
         )
 
         self.action_layers = nn.Sequential(
-            nn.Linear(240, self.config.n_latent_var),
+            nn.Linear(180, self.config.n_latent_var),
             nn.Tanh(),
             nn.Linear(self.config.n_latent_var, self.config.action_dim),
             nn.Softmax(dim=-1)
         )
+        # self.action_layers = nn.Sequential(
+        #     nn.Linear(240, self.config.n_latent_var),
+        #     nn.Tanh(),
+        #     nn.Linear(self.config.n_latent_var, self.config.action_dim),
+        #     nn.Softmax(dim=-1)
+        # )
 
     def forward(self, memory):
         # Load data on GPU
         conv_layers_input1 = memory.last_state_first_camera.to(device)
-        conv_layers_input2 = memory.last_state_second_camera.to(device)
+        # conv_layers_input2 = memory.last_state_second_camera.to(device)
         current_vector_observation = memory.latest_vector_observation.to(device)
         old_vector_observations = torch.flatten(memory.previous_vector_observations, start_dim=1).to(device)
 
         # Execute the model
         conv_layers1_output = self.conv_layers1(conv_layers_input1)
-        conv_layers2_output = self.conv_layers2(conv_layers_input2)
+        # conv_layers2_output = self.conv_layers2(conv_layers_input2)
         current_vector_observations_layers_output = self.current_vector_observations_layers(current_vector_observation)
         old_vector_observations_layers_output = self.old_vector_observations_layers(old_vector_observations)
-        x = torch.cat((conv_layers1_output, conv_layers2_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
+        x = torch.cat((conv_layers1_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
+        # x = torch.cat((conv_layers1_output, conv_layers2_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
 
         action_layers_output = self.action_layers(x)
 
@@ -161,12 +163,12 @@ class CriticModel(nn.Module):
             num_classes=60,
         )
 
-        self.conv_layers2 = models.DenseNet(
-            growth_rate=32,
-            block_config=(3, 6, 4),
-            num_init_features=64,
-            num_classes=60,
-        )
+        # self.conv_layers2 = models.DenseNet(
+        #     growth_rate=32,
+        #     block_config=(3, 6, 4),
+        #     num_init_features=64,
+        #     num_classes=60,
+        # )
 
         self.old_vector_observations_layers = nn.Sequential(
             nn.Linear(self.config.vector_observation_dim * (self.config.memory_samples - 1), self.config.n_latent_var),
@@ -181,25 +183,32 @@ class CriticModel(nn.Module):
         )
 
         self.value_layers = nn.Sequential(
-            nn.Linear(240, self.config.n_latent_var),
+            nn.Linear(180, self.config.n_latent_var),
             nn.Tanh(),
             nn.Linear(self.config.n_latent_var, 1),
         )
+
+        # self.value_layers = nn.Sequential(
+        #     nn.Linear(240, self.config.n_latent_var),
+        #     nn.Tanh(),
+        #     nn.Linear(self.config.n_latent_var, 1),
+        # )
 
     def forward(self, memory):
         # Load data on GPU
         # Load data on GPU
         conv_layers_input1 = memory.last_state_first_camera.to(device)
-        conv_layers_input2 = memory.last_state_second_camera.to(device)
+        # conv_layers_input2 = memory.last_state_second_camera.to(device)
         current_vector_observation = memory.latest_vector_observation.to(device)
         old_vector_observations = torch.flatten(memory.previous_vector_observations, start_dim=1).to(device)
 
         # Execute the model
         conv_layers1_output = self.conv_layers1(conv_layers_input1)
-        conv_layers2_output = self.conv_layers2(conv_layers_input2)
+        # conv_layers2_output = self.conv_layers2(conv_layers_input2)
         current_vector_observations_layers_output = self.current_vector_observations_layers(current_vector_observation)
         old_vector_observations_layers_output = self.old_vector_observations_layers(old_vector_observations)
-        x = torch.cat((conv_layers1_output, conv_layers2_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
+        x = torch.cat((conv_layers1_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
+        # x = torch.cat((conv_layers1_output, conv_layers2_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
 
         value_layers_output = self.value_layers(x)
 
@@ -263,7 +272,7 @@ class PPO:
             rewards.insert(0, discounted_reward)
 
         # Normalizing the rewards:
-        rewards = torch.tensor(rewards).to(device)
+        rewards = torch.tensor(rewards)
         rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-5)
 
         gpu_memory = memory.to(device)
@@ -271,7 +280,7 @@ class PPO:
         # Optimize policy for K epochs:
         for _ in range(self.config.K_epochs):
             # Evaluating old actions and values
-            # TODO: we can speed up this process by loading the memory in GPU one time, not for each K_epoch
+            # TODO: we can speed up this process by loading the values from memory on GPU one time, not for each K_epoch
             logprobs, state_values, dist_entropy = self.policy.evaluate(gpu_memory)
 
             # Finding the ratio (pi_theta / pi_theta__old):

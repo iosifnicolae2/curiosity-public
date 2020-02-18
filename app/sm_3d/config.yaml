@@ -1,22 +1,22 @@
 # Unity app
-env_filename: "unity-game.app"
+env_filename: "app/sm_3d/unity-game.app"
 env_worker_id: 1
 
 # Operations
 # Available operations: manual, train, evaluate
 operations: "clean, train"
-model_path: "./saved_models/model_episode_1.pth"
+model_path: "app/sm_3d/saved_models/model_episode_1.pth"
 
 # Algorithm parameters
 enable_stats: True
 render: False
 
 # Environment parameters
-action_dim: 4
-vector_observation_dim: 3
+action_dim: 7
+vector_observation_dim: 1
 
 # Memory
-memory_samples: 500
+memory_samples: 50
 
 # Reward
 # stop training if episode_reward > solved_reward
@@ -32,20 +32,20 @@ log_interval: 1
 # max training episodes
 max_episodes: 100
 # max timesteps in one episode
-max_timesteps: 5000
+max_timesteps: 500
 
 # Model parameters
 # number of variables in hidden layer
-n_latent_var: 5
+n_latent_var: 2
 # update policy every n timesteps
-update_timestep: 50
+update_timestep: 40
 lr: 0.002
 betas_start: 0.9
 betas_end: 0.999
 # discount factor
 gamma: 0.99
 # update policy for K epochs
-K_epochs: 5
+K_epochs: 3
 # clip parameter for PPO
 eps_clip: 0.2
 random_seed: 1000

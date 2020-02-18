@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 import torch
 import numpy
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from getkey import getkey, keys
 from gym_unity.envs import UnityEnv
 
-from models import Memory, PPO
+from app.sm_3d.models import Memory, PPO
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -52,13 +52,17 @@ class ManualControlAgent:
 
 class Stats:
     LAST_EXPLORATION_REWARDS = []
+    EPISODE_REWARDS = defaultdict(int)
 
     def __init__(self):
-        self.fig = plt.figure(figsize=(8, 8))
-        ax1 = plt.subplot(2, 2, 1)
-        self.ax2 = plt.subplot(2, 2, 2)
-        self.ax3 = plt.subplot(2, 2, 3)
-        ax4 = plt.subplot(2, 2, 4)
+        self.episode = 0
+
+        self.fig = plt.figure(figsize=(12, 8))
+        ax1 = plt.subplot(2, 3, 1)
+        self.ax2 = plt.subplot(2, 3, 2)
+        self.ax3 = plt.subplot(2, 3, 3)
+        ax4 = plt.subplot(2, 3, 4)
+        self.ax5 = plt.subplot(2, 3, 5)
 
         ax1.title.set_text('Game view')
 
@@ -66,12 +70,21 @@ class Stats:
         self.ax2.plot([])
         self.ax3.scatter([], [])
         self.im2 = ax4.imshow(numpy.zeros((256, 256, 3)), cmap='gray', vmin=0, vmax=255)
+        self.ax5.plot([])
 
         # TODO - or plt.
         plt.ion()
         plt.show()
 
     def process_stats(self, observation, reward, done, info):
+        self.EPISODE_REWARDS[self.episode] += reward
+        if done:
+            self.episode += 1
+
+            self.ax5.clear()
+            self.ax5.title.set_text('Episodes reward')
+            self.ax5.plot(list(self.EPISODE_REWARDS))
+
         # Update exploration rewards
         self.LAST_EXPLORATION_REWARDS.append(reward)
         self.LAST_EXPLORATION_REWARDS = self.LAST_EXPLORATION_REWARDS[-100:]
@@ -185,7 +198,7 @@ class Trainer:
 
                 print('Episode {} \t avg length: {} \t episode_reward: {}'.format(i_episode, avg_length, episode_reward))
 
-                torch.save(self.ppo.policy_old.state_dict(), './saved_models/model_episode_{}.pth'.format(i_episode))
+                torch.save(self.ppo.policy_old.state_dict(), 'app/sm_3d/saved_models/model_episode_{}.pth'.format(i_episode))
 
                 episode_reward = 0
                 running_reward = 0
@@ -266,7 +279,7 @@ class Trainer:
 
 
 if __name__ == '__main__':
-    with open(r'config.yaml') as file:
+    with open('app/sm_3d/config.yaml') as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
 
     config = namedtuple(

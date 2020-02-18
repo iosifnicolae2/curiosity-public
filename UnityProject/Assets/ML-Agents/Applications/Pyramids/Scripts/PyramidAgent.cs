@@ -16,7 +16,7 @@ public class PyramidAgent : Agent
     public bool useVectorObs;
     private List<String> MEMORY = new List<String>();
     private const int POSITION_ROUNDING = 0;
-    private const int POSITION_DECIMAL_ROUNDING = 1;
+    private const int POSITION_DECIMAL_ROUNDING = 3;
 
     public override void InitializeAgent()
     {
