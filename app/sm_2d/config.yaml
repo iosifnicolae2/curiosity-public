@@ -18,7 +18,7 @@ image_width: 56
 image_height: 56
 
 # Memory
-memory_samples: 40
+memory_samples: 50
 
 # Reward
 # stop training if episode_reward > solved_reward
