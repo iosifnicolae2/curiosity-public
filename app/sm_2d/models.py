@@ -23,38 +23,38 @@ class Memory:
         self.initialize_data()
 
     def initialize_data(self):
-        self.actions = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.int)
-        self.states = torch.zeros(1, self.config.memory_samples, 1, 3, self.config.image_width, self.config.image_height, dtype=torch.float)
-        # self.states = torch.zeros(1, self.config.memory_samples, 2, 3, self.config.image_width, self.config.image_height, dtype=torch.float)
-        self.logprobs = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.float)
+        self.actions = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.int).to(device)
+        self.states = torch.zeros(1, self.config.memory_samples, 1, 3, self.config.image_width, self.config.image_height, dtype=torch.float).to(device)
+        # self.states = torch.zeros(1, self.config.memory_samples, 2, 3, self.config.image_width, self.config.image_height, dtype=torch.float).to(device)
+        self.logprobs = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.float).to(device)
         self.vector_observations = torch.zeros(1, self.config.memory_samples, self.config.vector_observation_dim,
-                                               dtype=torch.float)
-        self.rewards = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.float)
-        self.is_terminals = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.bool)
+                                               dtype=torch.float).to(device)
+        self.rewards = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.float).to(device)
+        self.is_terminals = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.bool).to(device)
 
     def save_signals(self, state, reward, done, info, action, action_log_prob):
         if reward:
-            self.rewards = push_to_tensor(self.rewards, torch.tensor(reward, dtype=torch.float))
+            self.rewards = push_to_tensor(self.rewards, torch.tensor(reward, dtype=torch.float).to(device))
         if done:
-            self.is_terminals = push_to_tensor(self.is_terminals, torch.tensor(done, dtype=torch.bool))
+            self.is_terminals = push_to_tensor(self.is_terminals, torch.tensor(done, dtype=torch.bool).to(device))
         if state is not None:
-            self.states = push_to_tensor(self.states, self.preprocess_images(state).float())
+            self.states = push_to_tensor(self.states, self.preprocess_images(state).float().to(device))
         if action_log_prob:
-            self.logprobs = push_to_tensor(self.logprobs, action_log_prob.float())
+            self.logprobs = push_to_tensor(self.logprobs, action_log_prob.float().to(device))
         if info:
             agent_position = info['batched_step_result'].obs[3][0]
-            self.vector_observations = push_to_tensor(self.vector_observations, torch.tensor(agent_position, dtype=torch.float))
+            self.vector_observations = push_to_tensor(self.vector_observations, torch.tensor(agent_position, dtype=torch.float).to(device))
         if action:
-            self.actions = push_to_tensor(self.actions, torch.tensor(action, dtype=torch.int))
+            self.actions = push_to_tensor(self.actions, torch.tensor(action, dtype=torch.int).to(device))
 
-    def to(self, device):
-        self.actions = self.actions.to(device)
-        self.states = self.states.to(device)
-        self.logprobs = self.logprobs.to(device)
-        self.vector_observations = self.vector_observations.to(device)
-        self.rewards = self.rewards.to(device)
-        self.is_terminals = self.is_terminals.to(device)
-        return self
+    # def to(self, device):
+    #     self.actions = self.actions.to(device)
+    #     self.states = self.states.to(device)
+    #     self.logprobs = self.logprobs.to(device)
+    #     self.vector_observations = self.vector_observations.to(device)
+    #     self.rewards = self.rewards.to(device)
+    #     self.is_terminals = self.is_terminals.to(device)
+    #     return self
 
     @property
     def last_state_first_camera(self):
@@ -275,16 +275,14 @@ class PPO:
         rewards = torch.tensor(rewards)
         rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-5)
 
-        gpu_memory = memory.to(device)
-
         # Optimize policy for K epochs:
         for _ in range(self.config.K_epochs):
             # Evaluating old actions and values
             # TODO: we can speed up this process by loading the values from memory on GPU one time, not for each K_epoch
-            logprobs, state_values, dist_entropy = self.policy.evaluate(gpu_memory)
+            logprobs, state_values, dist_entropy = self.policy.evaluate(memory)
 
             # Finding the ratio (pi_theta / pi_theta__old):
-            ratios = torch.exp(logprobs - gpu_memory.logprobs.detach())
+            ratios = torch.exp(logprobs - memory.logprobs.detach())
 
             # Finding Surrogate Loss:
             advantages = rewards - state_values.detach()
