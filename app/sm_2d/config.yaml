@@ -9,7 +9,7 @@ model_path: "latest_model.pth"
 # Algorithm parameters
 enable_stats: False
 render: False
-threads: 10
+threads: 1
 
 # Environment parameters
 action_dim: 7
@@ -18,7 +18,7 @@ image_width: 56
 image_height: 56
 
 # Memory
-memory_samples: 50
+memory_samples: 20
 
 # Reward
 # stop training if episode_reward > solved_reward
