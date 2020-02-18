@@ -15,7 +15,7 @@ setup(
       'gym',
       'pillow<7',
       'torchvision',
-      'gym-unity',
+      'gym-unity==0.13.1',
       'mlagents==0.13.1',
       'mlagents-envs==0.13.1',
       'gym-minigrid',

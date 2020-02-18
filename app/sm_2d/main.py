@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import threading
 from collections import namedtuple, defaultdict
 from datetime import datetime
 
@@ -16,6 +17,7 @@ from gym_minigrid.minigrid import MiniGridEnv
 from gym_minigrid.wrappers import *
 
 from app.sm_2d.models import Memory, PPO
+from app.utils import ThreadWithReturnValue
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -137,10 +139,8 @@ class Stats:
 class Trainer:
     def __init__(
             self,
-            env,
             config,
     ):
-        self.env = env
         self.stats = None
         if config.enable_stats:
             self.stats = Stats()
@@ -152,96 +152,79 @@ class Trainer:
 
         if config.random_seed:
             torch.manual_seed(config.random_seed)
-            env.seed(config.random_seed)
 
-        self.memory = Memory(config)
         self.ppo = PPO(config)
 
     def train(self):
-        # logging variables
-        episode_reward = 0
-        running_reward = 0
-        avg_length = 0
-        timestep = 0
-        frames = 0
-
         # training loop
-        date_timestamp = datetime.now()
-        for i_episode in range(1, self.config.max_episodes + 1):
-            state = env.reset()
-            self.memory.clear_memory()
+        remaining_episodes = self.config.max_episodes
+        while remaining_episodes > 0:
+            threads_num = self.config.threads
+            threads = []
+
+            for t in range(threads_num):
+                threads.append(
+                    ThreadWithReturnValue(target=self.collect_experiences, name='t{}'.format(t)),
+                )
+
+            for t in threads:
+                t.start()
+
+            for t in threads:
+                memory = t.join()
+
+                self.ppo.update(memory)
+
+            self.save_policy()
+
+            remaining_episodes -= threads_num
+            print("remaining_episodes: {}".format(remaining_episodes))
+
+    def collect_experiences(self):
+        memory = Memory(self.config)
+        memory.clear_memory()
+
+        env = self.get_a_new_env()
+        episode_reward = 0
+        total_steps = 0
+        start_date = datetime.now()
+        env.reset()
+
+        for t in range(self.config.memory_samples):
+            # Running policy_old:
+            action, action_log_prob = self.ppo.policy_old.act(memory)
+
+            state, reward, done, info = env.step(action)
+
+            if self.stats:
+                self.stats.process_stats(state, reward, done, info)
+
+            total_steps += 1
+            episode_reward += reward
+
+            # Save the experience
+            memory.save_signals(state, reward, done, info, action, action_log_prob)
+
+            if done:
+                duration = (datetime.now() - start_date).total_seconds()
+                frames_per_sec = total_steps/duration
+                print('DONE. Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
+                return memory
 
             if self.config.render:
                 env.render()
 
-            reward, done, info, action, action_log_prob = 0, False, None, None, None
-            t = 0
+        env.close()
+        duration = (datetime.now() - start_date).total_seconds()
+        frames_per_sec = total_steps/duration
 
-            for t in range(self.config.max_timesteps):
-                timestep += 1
-                frames += 1
+        print('Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
 
-                # Save previous experience
-                self.memory.save_signals(state, reward, done, info, action, action_log_prob)
-
-                # Running policy_old:
-                action, action_log_prob = self.ppo.policy_old.act(self.memory)
-
-                state, reward, done, info = env.step(action)
-
-                if self.stats:
-                    self.stats.process_stats(state, reward, done, info)
-
-                # update if its time
-                if timestep % self.config.update_timestep == 0:
-                    self.ppo.update(self.memory)
-                    timestep = 0
-
-                running_reward += reward
-                episode_reward += reward
-
-                if t % self.config.log_interval_timestamps == 0:
-                    print(running_reward)
-                    running_reward = 0
-
-                if self.config.render:
-                    env.render()
-
-                if done:
-                    self.ppo.update(self.memory)
-                    break
-
-            avg_length += t
-            # stop training if avg_reward > solved_reward
-            if episode_reward > self.config.solved_reward:
-                print("########## Solved! ##########")
-                torch.save(self.ppo.policy_old.state_dict(), './model_final.pth')
-                break
-
-            # logging
-            if i_episode % self.config.log_interval == 0:
-                avg_length = int(avg_length / self.config.log_interval)
-                duration = (datetime.now() - date_timestamp).total_seconds()
-                print(
-                    'Episode {} \t avg length: {} \t episode_reward: {}\t duration: {} \t fps: {}'.format(
-                        i_episode,
-                        avg_length,
-                        episode_reward,
-                        duration,
-                        frames/duration,
-                    ),
-                )
-
-                torch.save(self.ppo.policy_old.state_dict(), './model_episode_{}.pth'.format(i_episode))
-
-                episode_reward = 0
-                running_reward = 0
-                avg_length = 0
-                frames = 0
-                date_timestamp = datetime.now()
+        return memory
 
     def manual_control(self, episodes=10, episode_steps=50000):
-        agent = ManualControlAgent(self.env)
+        env = self.get_a_new_env()
+        agent = ManualControlAgent(env)
         for episode in range(episodes):
             observation = env.reset()
 
@@ -264,82 +247,63 @@ class Trainer:
                 if done:
                     break
 
+    def load_state_dict(self, state):
+        self.ppo.policy_old.load_state_dict(state)
+
     def load_model(self, path):
-        self.ppo.policy_old.load_state_dict(torch.load(path))
+        self.load_state_dict(torch.load(path))
+
+    def train_single_core(self):
+        # training loop
+        remaining_episodes = self.config.max_episodes
+        while remaining_episodes > 0:
+
+            memory = self.collect_experiences()
+            self.ppo.update(memory)
+            self.save_policy()
+
+            remaining_episodes -= 1
+            print("remaining_episodes: {}".format(remaining_episodes))
 
     def evaluate(self):
-        # logging variables
-        total_reward = 0
-        running_reward = 0
-        avg_length = 0
-        timestep = 0
+        # evaluating loop
+        remaining_episodes = self.config.max_episodes
+        while remaining_episodes > 0:
+            self.collect_experiences()
+            remaining_episodes -= 1
+            print("remaining_episodes: {}".format(remaining_episodes))
 
-        # training loop
-        for i_episode in range(1, self.config.max_episodes + 1):
-            state = env.reset()
-            reward, done, info, action, action_log_prob = 0, False, None, None, None
-            t = 0
-            total_reward = 0
+    def save_policy(self):
+        torch.save(self.ppo.policy_old.state_dict(), './latest_model.pth')
 
-            for t in range(self.config.max_timesteps):
-                timestep += 1
-
-                # Save previous experience
-                self.memory.save_signals(state, reward, done, info, action, action_log_prob)
-
-                # Running policy_old:
-                action, action_log_prob = self.ppo.policy_old.act(self.memory)
-
-                state, reward, done, info = env.step(action)
-
-                if self.stats:
-                    self.stats.process_stats(state, reward, done, info)
-
-                running_reward += reward
-
-                if t % self.config.log_interval_timestamps == 0:
-                    print(running_reward)
-                    running_reward = 0
-
-                if self.config.render:
-                    env.render()
-                if done:
-                    break
-
-            avg_length += t
-
-            # logging
-            if i_episode % self.config.log_interval == 0:
-                avg_length = int(avg_length / self.config.log_interval)
-                running_reward = int((running_reward / self.config.log_interval))
-
-                print('Episode {} \t avg length: {} \t reward: {}'.format(i_episode, avg_length, running_reward))
-
-                total_reward = 0
-                running_reward = 0
-                avg_length = 0
+    def get_a_new_env(self):
+        env = gym.make(config.env)
+        env = RGBImgPartialObsWrapper(env)  # Get pixel observations
+        env = ImgObsWrapper(env)  # Get rid of the 'mission' field
+        if config.random_seed:
+            env.seed(config.random_seed)
+        return env
 
 
 if __name__ == '__main__':
     with open(r'app/sm_2d/config.yaml') as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
 
+    if 'train' in config['operations'] and config['threads'] > 1 and (config['render'] or config['enable_stats']):
+        print("When training using multiple threads, the rendering will be disabled!")
+        config['render'] = config['enable_stats'] = False
+
     config = namedtuple(
         'Struct',
         config.keys(),
     )(*config.values())
 
-    env = gym.make(config.env)
-    env = RGBImgPartialObsWrapper(env) # Get pixel observations
-    env = ImgObsWrapper(env) # Get rid of the 'mission' field
-    print('ok')
     try:
         trainer = Trainer(
-            env,
             config
         )
-        operations = config.operations
 
+        operations = config.operations
         if len(config.model_path) > 0 and 'clean' not in operations:
             trainer.load_model(config.model_path)
 
@@ -347,13 +311,13 @@ if __name__ == '__main__':
             trainer.manual_control()
 
         if 'train' in operations:
-            trainer.train()
+            if config.threads > 1:
+                trainer.train()
+            else:
+                trainer.train_single_core()
 
         if 'evaluate' in operations:
             trainer.evaluate()
 
     except Exception:
-        env.close()
         raise
-
-    env.close()
