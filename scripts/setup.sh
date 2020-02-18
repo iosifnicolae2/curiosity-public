@@ -1,6 +1,11 @@
 # Please run this script on bash
 
-pip install virtualenv
+apt install python3-pip
+apt-get install python3-setuptools
+apt-get install python-setuptools
+pip install -U pip setuptools
+
+pip3 install virtualenv
 
 virtualenv venv
 
