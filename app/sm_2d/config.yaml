@@ -38,7 +38,7 @@ max_timesteps: 500
 
 # Model parameters
 # number of variables in hidden layer
-n_latent_var: 2
+n_latent_var: 5
 lr: 0.002
 betas_start: 0.9
 betas_end: 0.999
