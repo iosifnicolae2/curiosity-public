@@ -3,13 +3,13 @@ env: "MiniGrid-Empty-Random-6x6-v0"
 
 # Operations
 # Available operations: manual, train, evaluate
-operations: "clean, train"
+operations: "train"
 model_path: "latest_model.pth"
 
 # Algorithm parameters
 enable_stats: False
 render: False
-threads: 8
+threads: 1
 
 # Environment parameters
 action_dim: 7
@@ -24,15 +24,9 @@ memory_samples: 50
 # stop training if episode_reward > solved_reward
 solved_reward: 500
 
-# Logging
-# print avg reward in the interval
-log_interval_timestamps: 100
-# print avg reward in the interval
-log_interval: 20
-
 # Training length
 # max training episodes
-max_episodes: 1000
+max_episodes: 10000
 # max timesteps in one episode
 max_timesteps: 500
 

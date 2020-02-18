@@ -236,3 +236,4 @@ UnityProject/csharp_timers.json
 UnityProject-copy/*
 app/sm_3d/csharp_timers.json
 *.pth
+!final_model.pth
