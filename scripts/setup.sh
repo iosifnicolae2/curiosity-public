@@ -11,6 +11,8 @@ source venv/bin/activate
 
 pip install .
 
+# curl -O https://repo.anaconda.com/archive/Anaconda3-2019.03-Linux-x86_64.sh
+# bash Anaconda3-2019.03-Linux-x86_64.sh
 # conda create -n conda_venv python=3.7.3 anaconda
 # conda activate conda_venv
 # pip install setuptools

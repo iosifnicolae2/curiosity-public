@@ -2,6 +2,7 @@
 import threading
 from collections import namedtuple, defaultdict
 from datetime import datetime
+from os import path
 
 import torch
 import numpy
@@ -158,6 +159,7 @@ class Trainer:
     def train(self):
         # training loop
         remaining_episodes = self.config.max_episodes
+        episodes_from_last_update = 0
         while remaining_episodes > 0:
             threads_num = self.config.threads
             threads = []
@@ -175,7 +177,12 @@ class Trainer:
 
                 self.ppo.update(memory)
 
-            self.save_policy()
+            if episodes_from_last_update > self.config.save_policy_every_x_episodes:
+                print("Saving the policy")
+                self.save_policy()
+                episodes_from_last_update = 0
+            else:
+                episodes_from_last_update += threads_num
 
             remaining_episodes -= threads_num
             print("remaining_episodes: {}".format(remaining_episodes))
@@ -256,14 +263,22 @@ class Trainer:
     def train_single_core(self):
         # training loop
         remaining_episodes = self.config.max_episodes
+        episodes_from_last_update = 0
         while remaining_episodes > 0:
-
             memory = self.collect_experiences()
             self.ppo.update(memory)
-            self.save_policy()
+
+            if episodes_from_last_update > self.config.save_policy_every_x_episodes:
+                print("Saving the policy")
+                self.save_policy()
+                episodes_from_last_update = 0
+            else:
+                episodes_from_last_update += 1
 
             remaining_episodes -= 1
             print("remaining_episodes: {}".format(remaining_episodes))
+
+        self.save_policy()
 
     def evaluate(self):
         # evaluating loop
@@ -305,7 +320,8 @@ if __name__ == '__main__':
 
         operations = config.operations
         if len(config.model_path) > 0 and 'clean' not in operations:
-            trainer.load_model(config.model_path)
+            if path.exists(config.model_path):
+                trainer.load_model(config.model_path)
 
         if 'manual' in operations:
             trainer.manual_control()

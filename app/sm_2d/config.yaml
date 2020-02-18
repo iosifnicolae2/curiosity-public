@@ -10,6 +10,7 @@ model_path: "latest_model.pth"
 enable_stats: False
 render: False
 threads: 1
+save_policy_every_x_episodes: 10
 
 # Environment parameters
 action_dim: 7
