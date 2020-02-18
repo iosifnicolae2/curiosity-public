@@ -9,7 +9,7 @@ model_path: "latest_model.pth"
 # Algorithm parameters
 enable_stats: False
 render: False
-threads: 3
+threads: 5
 
 # Environment parameters
 action_dim: 7
