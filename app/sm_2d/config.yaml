@@ -3,8 +3,8 @@ env: "MiniGrid-Empty-Random-6x6-v0"
 
 # Operations
 # Available operations: manual, train, evaluate
-operations: "clean, train"
-model_path: "app/sm_2d/saved_models/model_2d_episode_1.pth"
+operations: "train"
+model_path: "model_episode_100.pth"
 
 # Algorithm parameters
 enable_stats: False
@@ -27,11 +27,11 @@ solved_reward: 500
 # print avg reward in the interval
 log_interval_timestamps: 100
 # print avg reward in the interval
-log_interval: 5
+log_interval: 20
 
 # Training length
 # max training episodes
-max_episodes: 100
+max_episodes: 1000
 # max timesteps in one episode
 max_timesteps: 500
 
