@@ -221,7 +221,7 @@ class Trainer:
             if done:
                 duration = (datetime.now() - start_date).total_seconds()
                 frames_per_sec = total_steps/duration
-                print('DONE. Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
+                # print('DONE. Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
                 return memory, episode_reward
 
             if self.config.render:
@@ -231,7 +231,7 @@ class Trainer:
         duration = (datetime.now() - start_date).total_seconds()
         frames_per_sec = total_steps/duration
 
-        print('Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
+        # print('Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
 
         return memory, episode_reward
 
