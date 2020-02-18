@@ -282,10 +282,10 @@ class PPO:
             logprobs, state_values, dist_entropy = self.policy.evaluate(memory)
 
             # Finding the ratio (pi_theta / pi_theta__old):
-            ratios = torch.exp(logprobs - memory.logprobs.detach())
+            ratios = torch.exp(logprobs - memory.logprobs.detach()).to(device)
 
             # Finding Surrogate Loss:
-            advantages = rewards - state_values.detach()
+            advantages = (rewards - state_values.detach()).to(device)
             surr1 = ratios * advantages
             surr2 = torch.clamp(ratios, 1 - self.config.eps_clip, 1 + self.config.eps_clip) * advantages
 
