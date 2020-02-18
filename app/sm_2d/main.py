@@ -187,6 +187,8 @@ class Trainer:
             remaining_episodes -= threads_num
             print("remaining_episodes: {}".format(remaining_episodes))
 
+        self.save_policy()
+
     def collect_experiences(self):
         memory = Memory(self.config)
         memory.clear_memory()
