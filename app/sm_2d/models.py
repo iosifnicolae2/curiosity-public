@@ -289,7 +289,7 @@ class PPO:
             surr1 = ratios * advantages
             surr2 = torch.clamp(ratios, 1 - self.config.eps_clip, 1 + self.config.eps_clip) * advantages
 
-            rewards_sum = torch.sum(rewards)
+            rewards_sum = torch.sum(rewards).to(device)
             loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards_sum) - 0.01 * dist_entropy
 
             # take gradient step
