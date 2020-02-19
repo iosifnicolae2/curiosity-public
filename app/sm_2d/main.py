@@ -199,11 +199,12 @@ class Trainer:
             episode_duration = (datetime.now() - start_date).total_seconds()/processed_episodes
             remaining_time = episode_duration * remaining_episodes / 3600
             print(
-                "remaining_episodes: {} \t episode_reward: {:.4f} \t episode_duration: {:.4f} \t remaining_time: {:.4f}h".format(
+                "remaining_episodes: {} \t episode_reward: {:.4f} \t episode_duration: {:.4f} \t remaining_time: {:.4f}h \t reward: {:.4f}".format(
                     remaining_episodes,
                     episode_reward,
                     episode_duration,
                     remaining_time,
+                    total_reward/processed_episodes,
                 ),
             )
 
@@ -318,11 +319,12 @@ class Trainer:
             episode_duration = (datetime.now() - start_date).total_seconds()/total_episodes
             remaining_time = episode_duration * remaining_episodes / 3600
             print(
-                "remaining_episodes: {} \t episode_reward: {:.4f} \t episode_duration: {:.4f} \t remaining_time: {:.4f}h".format(
+                "remaining_episodes: {} \t episode_reward: {:.4f} \t episode_duration: {:.4f} \t remaining_time: {:.4f}h \t reward: {:.4f}".format(
                     remaining_episodes,
                     episode_reward,
                     episode_duration,
                     remaining_time,
+                    total_reward/total_episodes,
                 ),
             )
 
