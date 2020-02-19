@@ -9,7 +9,7 @@ model_path: "latest_model.pth"
 # Algorithm parameters
 enable_stats: False
 render: False
-threads: 3
+threads: 10
 save_policy_every_x_episodes: 10
 
 # Environment parameters
