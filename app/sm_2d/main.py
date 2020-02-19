@@ -313,6 +313,7 @@ class Trainer:
                     remaining_time,
                 ),
             )
+            start_date = datetime.now()
 
         self.save_policy()
 
