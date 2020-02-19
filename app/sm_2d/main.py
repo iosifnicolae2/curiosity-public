@@ -285,6 +285,7 @@ class Trainer:
         # training loop
         remaining_episodes = self.config.max_episodes
         episodes_from_last_update = 0
+        total_episodes = 0
         total_reward = 0
         processed_episodes = 0
         start_date = datetime.now()
@@ -302,8 +303,9 @@ class Trainer:
                 episodes_from_last_update += 1
 
             remaining_episodes -= 1
+            total_episodes += 1
 
-            episode_duration = (datetime.now() - start_date).total_seconds()
+            episode_duration = (datetime.now() - start_date).total_seconds()/total_episodes
             remaining_time = episode_duration * remaining_episodes / 3600
             print(
                 "remaining_episodes: {} \t episode_reward: {:.4f} \t episode_duration: {:.4f} \t remaining_time: {:.4f}h".format(
@@ -313,7 +315,6 @@ class Trainer:
                     remaining_time,
                 ),
             )
-            start_date = datetime.now()
 
         self.save_policy()
 
