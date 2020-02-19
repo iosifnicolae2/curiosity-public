@@ -14,8 +14,11 @@ from getkey import getkey, keys
 
 import gym
 import gym_minigrid
+from gym_minigrid.envs import EmptyEnv
 from gym_minigrid.minigrid import MiniGridEnv
 from gym_minigrid.wrappers import *
+
+from app.sm_2d.env_registers import *
 
 from app.sm_2d.models import Memory, PPO
 from app.utils import ThreadWithReturnValue
@@ -225,6 +228,9 @@ class Trainer:
                 duration = (datetime.now() - start_date).total_seconds()
                 frames_per_sec = total_steps/duration
                 print('DONE. Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
+                env.close()
+                if episode_reward == 0:
+                    print("Hmm")
                 return memory, episode_reward
 
             if self.config.render:
@@ -297,6 +303,8 @@ class Trainer:
                 episodes_from_last_update += 1
 
             remaining_episodes -= 1
+            if episode_reward == 0:
+                print("Hmm")
             print("remaining_episodes: {}, episode_reward: {}".format(remaining_episodes, episode_reward))
 
         self.save_policy()

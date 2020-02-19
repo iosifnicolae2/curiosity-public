@@ -1,5 +1,5 @@
 # Unity app
-env: "MiniGrid-Empty-Random-6x6-v0"
+env: "MiniGridNoLimit-Empty-6x6-v0"
 
 # Operations
 # Available operations: manual, train, evaluate
@@ -13,7 +13,7 @@ threads: 1
 save_policy_every_x_episodes: 10
 
 # Environment parameters
-action_dim: 7
+action_dim: 3
 vector_observation_dim: 3
 image_width: 7
 image_height: 7
