@@ -3,23 +3,23 @@ env: "MiniGrid-Empty-Random-6x6-v0"
 
 # Operations
 # Available operations: manual, train, evaluate
-operations: "clean, train"
+operations: "train"
 model_path: "latest_model.pth"
 
 # Algorithm parameters
 enable_stats: False
 render: False
-threads: 1
-save_policy_every_x_episodes: 1
+threads: 10
+save_policy_every_x_episodes: 10
 
 # Environment parameters
 action_dim: 7
 vector_observation_dim: 3
-image_width: 56
-image_height: 56
+image_width: 7
+image_height: 7
 
 # Memory
-memory_samples: 50
+memory_samples: 2000
 
 # Reward
 # stop training if episode_reward > solved_reward

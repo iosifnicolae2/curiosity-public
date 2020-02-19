@@ -221,7 +221,7 @@ class Trainer:
             if done:
                 duration = (datetime.now() - start_date).total_seconds()
                 frames_per_sec = total_steps/duration
-                # print('DONE. Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
+                print('DONE. Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
                 return memory, episode_reward
 
             if self.config.render:
@@ -231,7 +231,7 @@ class Trainer:
         duration = (datetime.now() - start_date).total_seconds()
         frames_per_sec = total_steps/duration
 
-        # print('Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
+        print('Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
 
         return memory, episode_reward
 
@@ -303,8 +303,8 @@ class Trainer:
 
     def get_a_new_env(self):
         env = gym.make(config.env)
-        env = RGBImgPartialObsWrapper(env)  # Get pixel observations
-        env = ImgObsWrapper(env)  # Get rid of the 'mission' field
+        # env = RGBImgPartialObsWrapper(env)  # Get pixel observations
+        # env = ImgObsWrapper(env)  # Get rid of the 'mission' field
         if config.random_seed:
             env.seed(config.random_seed)
         return env

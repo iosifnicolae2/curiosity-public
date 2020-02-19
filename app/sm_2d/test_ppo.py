@@ -139,7 +139,7 @@ def main():
     render = False
     solved_reward = 230  # stop training if avg_reward > solved_reward
     log_interval = 20  # print avg reward in the interval
-    max_episodes = 50000  # max training episodes
+    max_episodes = 1000  # max training episodes
     max_timesteps = 300  # max timesteps in one episode
     n_latent_var = 64  # number of variables in hidden layer
     update_timestep = 2000  # update policy every n timesteps
@@ -206,6 +206,8 @@ def main():
             print('Episode {} \t avg length: {} \t reward: {}'.format(i_episode, avg_length, running_reward))
             running_reward = 0
             avg_length = 0
+
+    torch.save(ppo.policy.state_dict(), './PPO_{}.pth'.format(env_name))
 
 
 if __name__ == '__main__':

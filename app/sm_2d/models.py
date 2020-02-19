@@ -38,7 +38,7 @@ class Memory:
         if done:
             self.is_terminals = push_to_tensor(self.is_terminals, torch.tensor(done, dtype=torch.bool).to(device))
         if state is not None:
-            self.states = push_to_tensor(self.states, self.preprocess_images(state).float().to(device))
+            self.states = push_to_tensor(self.states, self.preprocess_images(state['image']).float().to(device))
         if action_log_prob:
             self.logprobs = push_to_tensor(self.logprobs, action_log_prob.float().to(device))
         if info:
@@ -92,11 +92,21 @@ class ActorModel(nn.Module):
         super().__init__()
         self.config = config
 
-        self.conv_layers1 = models.DenseNet(
-            growth_rate=32,
-            block_config=(3, 6, 4),
-            num_init_features=64,
-            num_classes=60,
+        # self.conv_layers1 = models.DenseNet(
+        #     growth_rate=32,
+        #     block_config=(3, 6, 4),
+        #     num_init_features=64,
+        #     num_classes=60,
+        # )
+
+        self.image_conv = nn.Sequential(
+            nn.Conv2d(3, 16, (2, 2)),
+            nn.ReLU(),
+            nn.MaxPool2d((2, 2)),
+            nn.Conv2d(16, 32, (2, 2)),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, (2, 2)),
+            nn.ReLU()
         )
 
         # self.conv_layers2 = models.DenseNet(
@@ -119,7 +129,7 @@ class ActorModel(nn.Module):
         # )
 
         self.action_layers = nn.Sequential(
-            nn.Linear(60, self.config.n_latent_var),
+            nn.Linear(64, self.config.n_latent_var),
             nn.Tanh(),
             nn.Linear(self.config.n_latent_var, self.config.action_dim),
             nn.Softmax(dim=-1)
@@ -139,11 +149,13 @@ class ActorModel(nn.Module):
         # old_vector_observations = torch.flatten(memory.previous_vector_observations, start_dim=1).to(device)
 
         # Execute the model
-        conv_layers1_output = self.conv_layers1(conv_layers_input1)
+        # conv_layers1_output = self.conv_layers1(conv_layers_input1)
+        image_conv_output = self.image_conv(conv_layers_input1)
+        image_conv_output = image_conv_output.reshape(image_conv_output.shape[0], -1)
         # conv_layers2_output = self.conv_layers2(conv_layers_input2)
         # current_vector_observations_layers_output = self.current_vector_observations_layers(current_vector_observation)
         # old_vector_observations_layers_output = self.old_vector_observations_layers(old_vector_observations)
-        x = torch.cat((conv_layers1_output,), -1)
+        x = torch.cat((image_conv_output,), -1)
         # x = torch.cat((conv_layers1_output, conv_layers2_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
 
         action_layers_output = self.action_layers(x)
@@ -156,12 +168,23 @@ class CriticModel(nn.Module):
         super().__init__()
         self.config = config
 
-        self.conv_layers1 = models.DenseNet(
-            growth_rate=32,
-            block_config=(3, 6, 4),
-            num_init_features=64,
-            num_classes=60,
+        # self.conv_layers1 = models.DenseNet(
+        #     growth_rate=32,
+        #     block_config=(3, 6, 4),
+        #     num_init_features=64,
+        #     num_classes=60,
+        # )
+
+        self.image_conv = nn.Sequential(
+            nn.Conv2d(3, 16, (2, 2)),
+            nn.ReLU(),
+            nn.MaxPool2d((2, 2)),
+            nn.Conv2d(16, 32, (2, 2)),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, (2, 2)),
+            nn.ReLU()
         )
+        # TODO: we might need a LSTM memory
 
         # self.conv_layers2 = models.DenseNet(
         #     growth_rate=32,
@@ -183,7 +206,7 @@ class CriticModel(nn.Module):
         # )
 
         self.value_layers = nn.Sequential(
-            nn.Linear(60, self.config.n_latent_var),
+            nn.Linear(64, self.config.n_latent_var),
             nn.Tanh(),
             nn.Linear(self.config.n_latent_var, 1),
         )
@@ -203,11 +226,13 @@ class CriticModel(nn.Module):
         # old_vector_observations = torch.flatten(memory.previous_vector_observations, start_dim=1).to(device)
 
         # Execute the model
-        conv_layers1_output = self.conv_layers1(conv_layers_input1)
+        # conv_layers1_output = self.conv_layers1(conv_layers_input1)
+        image_conv_output = self.image_conv(conv_layers_input1)
+        image_conv_output = image_conv_output.reshape(image_conv_output.shape[0], -1)
         # conv_layers2_output = self.conv_layers2(conv_layers_input2)
         # current_vector_observations_layers_output = self.current_vector_observations_layers(current_vector_observation)
         # old_vector_observations_layers_output = self.old_vector_observations_layers(old_vector_observations)
-        x = torch.cat((conv_layers1_output,), -1)
+        x = torch.cat((image_conv_output,), -1)
         # x = torch.cat((conv_layers1_output, conv_layers2_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
 
         value_layers_output = self.value_layers(x)
@@ -295,7 +320,7 @@ class PPO:
             # take gradient step
             self.optimizer.zero_grad()
             # TODO
-            print("loss.mean(): {}".format(loss.mean()))
+            # print("loss.mean(): {}".format(loss.mean()))
             loss.mean().backward()
             self.optimizer.step()
 
