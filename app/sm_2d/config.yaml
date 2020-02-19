@@ -3,7 +3,7 @@ env: "MiniGrid-Empty-Random-6x6-v0"
 
 # Operations
 # Available operations: manual, train, evaluate
-operations: "train"
+operations: "clean, train"
 model_path: "latest_model.pth"
 
 # Algorithm parameters

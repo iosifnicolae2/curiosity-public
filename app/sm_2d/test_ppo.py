@@ -122,6 +122,7 @@ class PPO:
 
             # take gradient step
             self.optimizer.zero_grad()
+            print("loss.mean(): {}".format(loss.mean()))
             loss.mean().backward()
             self.optimizer.step()
 
@@ -136,13 +137,13 @@ def main():
     env = gym.make(env_name)
     state_dim = env.observation_space.shape[0]
     action_dim = 4
-    render = True
+    render = False
     solved_reward = 230  # stop training if avg_reward > solved_reward
     log_interval = 20  # print avg reward in the interval
     max_episodes = 1000  # max training episodes
     max_timesteps = 300  # max timesteps in one episode
     n_latent_var = 64  # number of variables in hidden layer
-    update_timestep = 2000  # update policy every n timesteps
+    update_timestep = 100  # update policy every n timesteps
     lr = 0.002
     betas = (0.9, 0.999)
     gamma = 0.99  # discount factor

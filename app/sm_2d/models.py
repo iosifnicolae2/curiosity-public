@@ -24,7 +24,7 @@ class Memory:
 
     def initialize_data(self):
         self.actions = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.int).to(device)
-        self.states = torch.zeros(1, self.config.memory_samples, 1, 3, self.config.image_width, self.config.image_height, dtype=torch.float).to(device)
+        self.states = torch.zeros(1, self.config.memory_samples, 3, self.config.image_width, self.config.image_height, dtype=torch.float).to(device)
         # self.states = torch.zeros(1, self.config.memory_samples, 2, 3, self.config.image_width, self.config.image_height, dtype=torch.float).to(device)
         self.logprobs = torch.zeros(1, self.config.memory_samples, 1, dtype=torch.float).to(device)
         self.vector_observations = torch.zeros(1, self.config.memory_samples, self.config.vector_observation_dim,
@@ -57,8 +57,12 @@ class Memory:
     #     return self
 
     @property
+    def last_states_first_camera(self):
+        return self.states[0]
+
+    @property
     def last_state_first_camera(self):
-        return self.states[:, -1, 0]
+        return self.states[:, -1]
 
     # @property
     # def last_state_second_camera(self):
@@ -75,6 +79,10 @@ class Memory:
     @property
     def last_action(self):
         return self.actions[:, -1]
+
+    @property
+    def last_actions(self):
+        return self.actions
 
     @staticmethod
     def preprocess_images(output_img):
@@ -141,9 +149,12 @@ class ActorModel(nn.Module):
         #     nn.Softmax(dim=-1)
         # )
 
-    def forward(self, memory):
+    def forward(self, memory, all_previous_experiences=False):
         # Load data on GPU
-        conv_layers_input1 = memory.last_state_first_camera.to(device)
+        if all_previous_experiences:
+            conv_layers_input1 = memory.last_states_first_camera.to(device)
+        else:
+            conv_layers_input1 = memory.last_state_first_camera.to(device)
         # conv_layers_input2 = memory.last_state_second_camera.to(device)
         # current_vector_observation = memory.latest_vector_observation.to(device)
         # old_vector_observations = torch.flatten(memory.previous_vector_observations, start_dim=1).to(device)
@@ -217,10 +228,12 @@ class CriticModel(nn.Module):
         #     nn.Linear(self.config.n_latent_var, 1),
         # )
 
-    def forward(self, memory):
+    def forward(self, memory, all_previous_experiences=False):
         # Load data on GPU
-        # Load data on GPU
-        conv_layers_input1 = memory.last_state_first_camera.to(device)
+        if all_previous_experiences:
+            conv_layers_input1 = memory.last_states_first_camera.to(device)
+        else:
+            conv_layers_input1 = memory.last_state_first_camera.to(device)
         # conv_layers_input2 = memory.last_state_second_camera.to(device)
         # current_vector_observation = memory.latest_vector_observation.to(device)
         # old_vector_observations = torch.flatten(memory.previous_vector_observations, start_dim=1).to(device)
@@ -258,20 +271,18 @@ class ActorCritic(nn.Module):
 
     def evaluate(self, memory):
         # Load data into GPU
-        action = memory.last_action.to(device)
-
-        action_probs = self.action_layers(memory)
+        action_probs = self.action_layers(memory, all_previous_experiences=True)
         dist = Categorical(action_probs)
+        action_logprobs = dist.log_prob(memory.last_actions)
 
-        action_logprob = dist.log_prob(action)
         dist_entropy = dist.entropy()
 
-        state_value = self.value_layers(memory)
+        state_value = self.value_layers(memory, all_previous_experiences=True)
 
         # Preprocess the data
         state_value = torch.squeeze(state_value)
 
-        return action_logprob, state_value, dist_entropy
+        return action_logprobs, state_value, dist_entropy
 
 
 class PPO:
@@ -314,13 +325,12 @@ class PPO:
             surr1 = ratios * advantages
             surr2 = torch.clamp(ratios, 1 - self.config.eps_clip, 1 + self.config.eps_clip) * advantages
 
-            rewards_sum = torch.sum(rewards).to(device)
-            loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards_sum) - 0.01 * dist_entropy
+            loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards) - 0.01 * dist_entropy
 
             # take gradient step
             self.optimizer.zero_grad()
             # TODO
-            # print("loss.mean(): {}".format(loss.mean()))
+            print("loss.mean(): {}".format(loss.mean()))
             loss.mean().backward()
             self.optimizer.step()
 
