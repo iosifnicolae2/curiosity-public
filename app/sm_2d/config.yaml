@@ -3,14 +3,14 @@ env: "MiniGridNoLimit-Empty-6x6-v0"
 
 # Operations
 # Available operations: manual, train, evaluate
-operations: "clean, train"
+operations: "train"
 model_path: "latest_model.pth"
 
 # Algorithm parameters
 enable_stats: False
 render: False
 threads: 1
-save_policy_every_x_episodes: 10
+save_policy_every_x_episodes: 50
 
 # Environment parameters
 action_dim: 3
