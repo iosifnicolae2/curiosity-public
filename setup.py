@@ -12,7 +12,7 @@ setup(
       'pyyaml',
       'torch==1.4.0',
       'NumPy',
-      'gym',
+      'gym[all]',
       'pillow<7',
       'torchvision',
       'gym-unity==0.13.1',

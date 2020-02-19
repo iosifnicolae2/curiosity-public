@@ -286,7 +286,7 @@ class Trainer:
                 episodes_from_last_update += 1
 
             remaining_episodes -= 1
-            print("remaining_episodes: {}, average_reward: {}".format(remaining_episodes, total_reward/processed_episodes))
+            print("remaining_episodes: {}, episode_reward: {}".format(remaining_episodes, episode_reward))
 
         self.save_policy()
 
@@ -331,7 +331,12 @@ if __name__ == '__main__':
         operations = config.operations
         if len(config.model_path) > 0 and 'clean' not in operations:
             if path.exists(config.model_path):
-                trainer.load_model(config.model_path)
+                if torch.cuda.is_available():
+                    map_location = lambda storage, loc: storage.cuda()
+                else:
+                    map_location = 'cpu'
+
+                checkpoint = torch.load(config.model_path, map_location=map_location)
 
         if 'manual' in operations:
             trainer.manual_control()

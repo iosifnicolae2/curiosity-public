@@ -106,20 +106,20 @@ class ActorModel(nn.Module):
         #     num_classes=60,
         # )
 
-        self.old_vector_observations_layers = nn.Sequential(
-            nn.Linear(self.config.vector_observation_dim * (self.config.memory_samples - 1), self.config.n_latent_var),
-            nn.Tanh(),
-            nn.Linear(self.config.n_latent_var, 60),
-        )
-
-        self.current_vector_observations_layers = nn.Sequential(
-            nn.Linear(self.config.vector_observation_dim, self.config.n_latent_var),
-            nn.Tanh(),
-            nn.Linear(self.config.n_latent_var, 60),
-        )
+        # self.old_vector_observations_layers = nn.Sequential(
+        #     nn.Linear(self.config.vector_observation_dim * (self.config.memory_samples - 1), self.config.n_latent_var),
+        #     nn.Tanh(),
+        #     nn.Linear(self.config.n_latent_var, 60),
+        # )
+        #
+        # self.current_vector_observations_layers = nn.Sequential(
+        #     nn.Linear(self.config.vector_observation_dim, self.config.n_latent_var),
+        #     nn.Tanh(),
+        #     nn.Linear(self.config.n_latent_var, 60),
+        # )
 
         self.action_layers = nn.Sequential(
-            nn.Linear(180, self.config.n_latent_var),
+            nn.Linear(60, self.config.n_latent_var),
             nn.Tanh(),
             nn.Linear(self.config.n_latent_var, self.config.action_dim),
             nn.Softmax(dim=-1)
@@ -135,15 +135,15 @@ class ActorModel(nn.Module):
         # Load data on GPU
         conv_layers_input1 = memory.last_state_first_camera.to(device)
         # conv_layers_input2 = memory.last_state_second_camera.to(device)
-        current_vector_observation = memory.latest_vector_observation.to(device)
-        old_vector_observations = torch.flatten(memory.previous_vector_observations, start_dim=1).to(device)
+        # current_vector_observation = memory.latest_vector_observation.to(device)
+        # old_vector_observations = torch.flatten(memory.previous_vector_observations, start_dim=1).to(device)
 
         # Execute the model
         conv_layers1_output = self.conv_layers1(conv_layers_input1)
         # conv_layers2_output = self.conv_layers2(conv_layers_input2)
-        current_vector_observations_layers_output = self.current_vector_observations_layers(current_vector_observation)
-        old_vector_observations_layers_output = self.old_vector_observations_layers(old_vector_observations)
-        x = torch.cat((conv_layers1_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
+        # current_vector_observations_layers_output = self.current_vector_observations_layers(current_vector_observation)
+        # old_vector_observations_layers_output = self.old_vector_observations_layers(old_vector_observations)
+        x = torch.cat((conv_layers1_output,), -1)
         # x = torch.cat((conv_layers1_output, conv_layers2_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
 
         action_layers_output = self.action_layers(x)
@@ -170,20 +170,20 @@ class CriticModel(nn.Module):
         #     num_classes=60,
         # )
 
-        self.old_vector_observations_layers = nn.Sequential(
-            nn.Linear(self.config.vector_observation_dim * (self.config.memory_samples - 1), self.config.n_latent_var),
-            nn.Tanh(),
-            nn.Linear(self.config.n_latent_var, 60),
-        )
-
-        self.current_vector_observations_layers = nn.Sequential(
-            nn.Linear(self.config.vector_observation_dim, self.config.n_latent_var),
-            nn.Tanh(),
-            nn.Linear(self.config.n_latent_var, 60),
-        )
+        # self.old_vector_observations_layers = nn.Sequential(
+        #     nn.Linear(self.config.vector_observation_dim * (self.config.memory_samples - 1), self.config.n_latent_var),
+        #     nn.Tanh(),
+        #     nn.Linear(self.config.n_latent_var, 60),
+        # )
+        #
+        # self.current_vector_observations_layers = nn.Sequential(
+        #     nn.Linear(self.config.vector_observation_dim, self.config.n_latent_var),
+        #     nn.Tanh(),
+        #     nn.Linear(self.config.n_latent_var, 60),
+        # )
 
         self.value_layers = nn.Sequential(
-            nn.Linear(180, self.config.n_latent_var),
+            nn.Linear(60, self.config.n_latent_var),
             nn.Tanh(),
             nn.Linear(self.config.n_latent_var, 1),
         )
@@ -199,15 +199,15 @@ class CriticModel(nn.Module):
         # Load data on GPU
         conv_layers_input1 = memory.last_state_first_camera.to(device)
         # conv_layers_input2 = memory.last_state_second_camera.to(device)
-        current_vector_observation = memory.latest_vector_observation.to(device)
-        old_vector_observations = torch.flatten(memory.previous_vector_observations, start_dim=1).to(device)
+        # current_vector_observation = memory.latest_vector_observation.to(device)
+        # old_vector_observations = torch.flatten(memory.previous_vector_observations, start_dim=1).to(device)
 
         # Execute the model
         conv_layers1_output = self.conv_layers1(conv_layers_input1)
         # conv_layers2_output = self.conv_layers2(conv_layers_input2)
-        current_vector_observations_layers_output = self.current_vector_observations_layers(current_vector_observation)
-        old_vector_observations_layers_output = self.old_vector_observations_layers(old_vector_observations)
-        x = torch.cat((conv_layers1_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
+        # current_vector_observations_layers_output = self.current_vector_observations_layers(current_vector_observation)
+        # old_vector_observations_layers_output = self.old_vector_observations_layers(old_vector_observations)
+        x = torch.cat((conv_layers1_output,), -1)
         # x = torch.cat((conv_layers1_output, conv_layers2_output, current_vector_observations_layers_output, old_vector_observations_layers_output), -1)
 
         value_layers_output = self.value_layers(x)
@@ -295,6 +295,7 @@ class PPO:
             # take gradient step
             self.optimizer.zero_grad()
             # TODO
+            print("loss.mean(): {}".format(loss.mean()))
             loss.mean().backward()
             self.optimizer.step()
 
