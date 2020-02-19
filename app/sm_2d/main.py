@@ -192,7 +192,7 @@ class Trainer:
 
             remaining_episodes -= threads_num
             processed_episodes += threads_num
-            print("remaining_episodes: {}, average_reward: {}".format(remaining_episodes, total_reward/processed_episodes))
+            print("remaining_episodes: {} \t average_reward: {}".format(remaining_episodes, total_reward/processed_episodes))
 
         self.save_policy()
 
