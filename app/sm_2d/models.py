@@ -2,10 +2,8 @@
 import torch
 import torch.nn as nn
 
-from PIL import Image
 from torch.distributions import Categorical
 
-import torchvision.models as models
 import torchvision.transforms as transforms
 
 from app.utils import push_to_tensor
@@ -330,7 +328,7 @@ class PPO:
             # take gradient step
             self.optimizer.zero_grad()
             # TODO
-            print("loss.mean(): {}".format(loss.mean()))
+            # print("loss.mean(): {}".format(loss.mean()))
             loss.mean().backward()
             self.optimizer.step()
 

@@ -226,11 +226,9 @@ class Trainer:
 
             if done:
                 env.close()
-                if episode_reward == 0:
-                    print("Hmm")
                 duration = (datetime.now() - start_date).total_seconds()
                 frames_per_sec = total_steps/duration
-                print('DONE. Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
+                # print('DONE. Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
                 return memory, episode_reward
 
             if self.config.render:
@@ -240,7 +238,7 @@ class Trainer:
         duration = (datetime.now() - start_date).total_seconds()
         frames_per_sec = total_steps/duration
 
-        print('Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
+        # print('Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
 
         return memory, episode_reward
 
@@ -289,6 +287,7 @@ class Trainer:
         episodes_from_last_update = 0
         total_reward = 0
         processed_episodes = 0
+        start_date = datetime.now()
         while remaining_episodes > 0:
             memory, episode_reward = self.collect_experiences()
             total_reward += episode_reward
@@ -303,9 +302,17 @@ class Trainer:
                 episodes_from_last_update += 1
 
             remaining_episodes -= 1
-            if episode_reward == 0:
-                print("Hmm")
-            print("remaining_episodes: {}, episode_reward: {}".format(remaining_episodes, episode_reward))
+
+            episode_duration = (datetime.now() - start_date).total_seconds()
+            remaining_time = episode_duration * remaining_episodes / 3600
+            print(
+                "remaining_episodes: {} \t episode_reward: {:.4f} \t episode_duration: {:.4f} \t remaining_time: {:.4f}h".format(
+                    remaining_episodes,
+                    episode_reward,
+                    episode_duration,
+                    remaining_time,
+                ),
+            )
 
         self.save_policy()
 
