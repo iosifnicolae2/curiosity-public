@@ -136,7 +136,7 @@ def main():
     env = gym.make(env_name)
     state_dim = env.observation_space.shape[0]
     action_dim = 4
-    render = False
+    render = True
     solved_reward = 230  # stop training if avg_reward > solved_reward
     log_interval = 20  # print avg reward in the interval
     max_episodes = 1000  # max training episodes
@@ -149,6 +149,7 @@ def main():
     K_epochs = 4  # update policy for K epochs
     eps_clip = 0.2  # clip parameter for PPO
     random_seed = None
+    model_path = "./PPO_LunarLander-v2.pth"
     #############################################
 
     if random_seed:
@@ -163,6 +164,15 @@ def main():
     running_reward = 0
     avg_length = 0
     timestep = 0
+
+    if model_path:
+        if torch.cuda.is_available():
+            map_location = lambda storage, loc: storage.cuda()
+        else:
+            map_location = 'cpu'
+
+        checkpoint = torch.load(model_path, map_location=map_location)
+        ppo.policy_old.load_state_dict(checkpoint)
 
     # training loop
     for i_episode in range(1, max_episodes + 1):

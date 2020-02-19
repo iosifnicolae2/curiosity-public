@@ -107,14 +107,23 @@ class Stats:
 
         # Update visualisation
 
-        if observation.shape == (56, 56, 3):
-            self.im1.set_data(observation[:, :, :])
+        if type(observation) == dict:
+            self.im1.set_data(observation['image'][:, :, :])
+        else:
+            if observation.shape == (56, 56, 3):
+                self.im1.set_data(observation[:, :, :])
 
-        if observation[0].shape == (56, 56, 3):
-            self.im1.set_data(observation[0][:, :, :])
+            if observation[0].shape == (56, 56, 3):
+                self.im1.set_data(observation[0][:, :, :])
 
-        if observation[0].shape == (56, 56, 1):
-            self.im1.set_data(observation[0][:, :, 0])
+            if observation[0].shape == (56, 56, 1):
+                self.im1.set_data(observation[0][:, :, 0])
+
+            if len(observation) > 0 and observation[0].shape == (56, 56, 3):
+                self.im1.set_data(observation[0][:, :, :])
+
+            if len(observation) > 1 and observation[1].shape == (56, 56, 3):
+                self.im2.set_data(observation[1][:, :, :])
 
         self.ax2.clear()
         self.ax2.plot(self.LAST_EXPLORATION_REWARDS)
@@ -126,12 +135,6 @@ class Stats:
 
         self.ax2.title.set_text('Exploration reward')
         # self.ax3.title.set_text('Exploration map')
-
-        if len(observation) > 0 and observation[0].shape == (56, 56, 3):
-            self.im1.set_data(observation[0][:, :, :])
-
-        if len(observation) > 1 and observation[1].shape == (56, 56, 3):
-            self.im2.set_data(observation[1][:, :, :])
 
         self.fig.canvas.draw_idle()
         plt.pause(0.05)
@@ -262,9 +265,17 @@ class Trainer:
 
     def load_state_dict(self, state):
         self.ppo.policy_old.load_state_dict(state)
+        self.ppo.policy.load_state_dict(state)
 
     def load_model(self, path):
-        self.load_state_dict(torch.load(path))
+        if torch.cuda.is_available():
+            map_location = lambda storage, loc: storage.cuda()
+        else:
+            map_location = 'cpu'
+
+        checkpoint = torch.load(config.model_path, map_location=map_location)
+
+        self.load_state_dict(checkpoint)
 
     def train_single_core(self):
         # training loop
@@ -331,12 +342,7 @@ if __name__ == '__main__':
         operations = config.operations
         if len(config.model_path) > 0 and 'clean' not in operations:
             if path.exists(config.model_path):
-                if torch.cuda.is_available():
-                    map_location = lambda storage, loc: storage.cuda()
-                else:
-                    map_location = 'cpu'
-
-                checkpoint = torch.load(config.model_path, map_location=map_location)
+                trainer.load_model(config.model_path)
 
         if 'manual' in operations:
             trainer.manual_control()
