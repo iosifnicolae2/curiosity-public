@@ -165,6 +165,7 @@ class Trainer:
     def train(self):
         # training loop
         remaining_episodes = self.config.max_episodes
+        start_date = datetime.now()
         episodes_from_last_update = 0
         processed_episodes = 0
         total_reward = 0
@@ -195,7 +196,16 @@ class Trainer:
 
             remaining_episodes -= threads_num
             processed_episodes += threads_num
-            print("remaining_episodes: {} \t average_reward: {}".format(remaining_episodes, total_reward/processed_episodes))
+            episode_duration = (datetime.now() - start_date).total_seconds()/processed_episodes
+            remaining_time = episode_duration * remaining_episodes / 3600
+            print(
+                "remaining_episodes: {} \t episode_reward: {:.4f} \t episode_duration: {:.4f} \t remaining_time: {:.4f}h".format(
+                    remaining_episodes,
+                    episode_reward,
+                    episode_duration,
+                    remaining_time,
+                ),
+            )
 
         self.save_policy()
 
