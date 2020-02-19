@@ -200,13 +200,13 @@ class Trainer:
         self.save_policy()
 
     def collect_experiences(self):
+        start_date = datetime.now()
         memory = Memory(self.config)
         memory.clear_memory()
 
         env = self.get_a_new_env()
         episode_reward = 0
         total_steps = 0
-        start_date = datetime.now()
         env.reset()
 
         for t in range(self.config.memory_samples):
@@ -225,12 +225,12 @@ class Trainer:
             memory.save_signals(state, reward, done, info, action, action_log_prob)
 
             if done:
-                duration = (datetime.now() - start_date).total_seconds()
-                frames_per_sec = total_steps/duration
-                print('DONE. Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
                 env.close()
                 if episode_reward == 0:
                     print("Hmm")
+                duration = (datetime.now() - start_date).total_seconds()
+                frames_per_sec = total_steps/duration
+                print('DONE. Episode_steps: {} \t Episode_reward: {} \t frames_per_sec: {}'.format(total_steps, episode_reward, frames_per_sec))
                 return memory, episode_reward
 
             if self.config.render:

@@ -42,6 +42,14 @@ class EmptyEnvNoLimit(MiniGridEnv):
 
         self.mission = "get to the green goal square"
 
+    def _reward(self):
+        """
+        Compute the reward to be given upon success
+        """
+
+        return 0.99 ** self.step_count
+
+
 class EmptyEnvNoLimit6X6(EmptyEnvNoLimit):
     def __init__(self):
         super().__init__(size=6)
