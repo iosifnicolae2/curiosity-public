@@ -8,7 +8,7 @@ from app.sm_2d.agents import Agent
 
 from app.sm_2d.env_registers import *
 
-env = 'MiniGridNoLimit-Empty-6x6-v0'
+env = 'MiniGrid-SimpleCrossingS11N5-v0'
 seed = 1
 mem = False
 text = False

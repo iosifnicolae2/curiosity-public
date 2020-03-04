@@ -17,7 +17,7 @@ from app.sm_2d.utils import get_obss_preprocessor, get_model_dir, make_env
 
 from app.sm_2d.env_registers import *
 
-env_name = 'MiniGridNoLimit-Empty-6x6-v0'
+env_name = 'MiniGrid-SimpleCrossingS11N5-v0'
 seed = 1
 mem = False
 text = False
