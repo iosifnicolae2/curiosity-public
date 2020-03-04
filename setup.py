@@ -10,7 +10,7 @@ setup(
    install_requires=[
       'getkey',
       'pyyaml',
-      'torch==1.4.0',
+      'torch',
       'torch_ac',
       'NumPy',
       'gym',
