@@ -10,6 +10,13 @@ def push_to_tensor(tensor, x):
     return torch.cat((tensor, x), 1)[:, 1:, :]
 
 
+def push_to_tensor_inverse(tensor, x):
+    while len(x.shape) < len(tensor.shape):
+        x = x.unsqueeze(0)
+
+    return torch.cat((x, tensor), 1)[:, :-1, :]
+
+
 class ThreadWithReturnValue(Thread):
     def __init__(self, group=None, target=None, name=None,
                  args=(), kwargs={}, Verbose=None):
