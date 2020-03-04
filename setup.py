@@ -11,6 +11,7 @@ setup(
       'getkey',
       'pyyaml',
       'torch==1.4.0',
+      'torch_ac',
       'NumPy',
       'gym[all]',
       'pillow<7',
