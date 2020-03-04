@@ -13,7 +13,7 @@ setup(
       'torch==1.4.0',
       'torch_ac',
       'NumPy',
-      'gym[all]',
+      'gym',
       'pillow<7',
       'torchvision',
       'gym-unity==0.13.1',
