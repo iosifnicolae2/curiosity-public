@@ -151,8 +151,9 @@ while num_frames < frames:
         data += [logs["entropy"], logs["value"], logs["policy_loss"], logs["value_loss"], logs["grad_norm"]]
 
         print(
-            "U {} | F {:06} | FPS {:04.0f} | D {} | rR:μσmM {:.2f} {:.2f} {:.2f} {:.2f} | F:μσmM {:.1f} {:.1f} {} {} | H {:.3f} | V {:.3f} | pL {:.3f} | vL {:.3f} | ∇ {:.3f}"
-                .format(*data))
+            "U {} | F {:06} | FPS {:04.0f} | D {} | rR:μσmM {:.2f} {:.2f} {:.2f} {:.2f} | F:μσmM {:.1f} {:.1f} {} {} |"
+            " H {:.3f} | V {:.3f} | pL {:.3f} | vL {:.3f} | ∇ {:.3f}".format(*data),
+        )
 
         header += ["return_" + key for key in return_per_episode.keys()]
         data += return_per_episode.values()
@@ -160,8 +161,12 @@ while num_frames < frames:
     # Save status
 
     if save_interval > 0 and update % save_interval == 0:
-        status = {"num_frames": num_frames, "update": update,
-                  "model_state": acmodel.state_dict(), "optimizer_state": algo.optimizer.state_dict()}
+        status = {
+            "num_frames": num_frames,
+            "update": update,
+            "model_state": acmodel.state_dict(),
+            "optimizer_state": algo.optimizer.state_dict(),
+        }
         if hasattr(preprocess_obss, "vocab"):
             status["vocab"] = preprocess_obss.vocab.vocab
         save_status(status, model_dir)
