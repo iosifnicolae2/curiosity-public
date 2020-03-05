@@ -1,6 +1,3 @@
-import time
-import collections
-
 import torch
 import torch_ac
 
@@ -18,7 +15,7 @@ def init_params(m):
             m.bias.data.fill_(0)
 
 
-class ACModel(nn.Module, torch_ac.ACModel):
+class ACModel(nn.Module, torch_ac.RecurrentACModel):
     def __init__(self, obs_space, action_space, use_memory=False, use_text=False):
         super().__init__()
 
@@ -104,10 +101,7 @@ class ACModel(nn.Module, torch_ac.ACModel):
         x = self.critic(embedding)
         value = x.squeeze(1)
 
-        if memory:
-            return dist, value, memory
-        
-        return dist, value
+        return dist, value, memory
 
     def _get_embed_text(self, text):
         _, hidden = self.text_rnn(self.word_embedding(text))
