@@ -8,6 +8,8 @@ import torch_ac
 import gym
 from gym_minigrid.wrappers import RGBImgPartialObsWrapper
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def make_env(env_key, seed=None):
     env = gym.make(env_key)
@@ -32,7 +34,12 @@ def get_status_path(model_dir):
 
 def get_status(model_dir):
     path = get_status_path(model_dir)
+
+    if device.type == "cpu":
+        return torch.load(path, map_location=torch.device('cpu'))
+
     return torch.load(path)
+
 
 def get_model_state(model_dir):
     return get_status(model_dir)["model_state"]

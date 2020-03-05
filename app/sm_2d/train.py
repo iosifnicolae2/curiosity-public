@@ -13,7 +13,7 @@ import gym_minigrid
 
 from app.sm_2d.models import ACModel
 
-from app.sm_2d.utils import get_obss_preprocessor, get_model_dir, make_env
+from app.sm_2d.utils import get_obss_preprocessor, get_model_dir, make_env, get_status, get_status_path
 
 from app.sm_2d.env_registers import *
 
@@ -37,7 +37,7 @@ epochs=4
 batch_size=256
 log_interval=1
 save_interval = 10
-procs = 15
+procs = 1
 
 date = datetime.datetime.now().strftime("%y-%m-%d-%H-%M-%S")
 default_model_name = f"{env_name}_PPO_seed{seed}_{date}"
@@ -57,14 +57,6 @@ env = envs[0]
 
 obs_space, preprocess_obss = get_obss_preprocessor(env.observation_space)
 
-
-def get_status_path(model_dir):
-    return os.path.join(model_dir, "status.pt")
-
-
-def get_status(model_dir):
-    path = get_status_path(model_dir)
-    return torch.load(path)
 
 try:
     status = get_status(model_dir)
@@ -123,7 +115,7 @@ def synthesize(array):
 num_frames = status["num_frames"]
 update = status["update"]
 start_time = time.time()
-
+print("Starting the training..")
 while num_frames < frames:
     update_start_time = time.time()
     exps, logs1 = algo.collect_experiences()
@@ -172,6 +164,7 @@ while num_frames < frames:
         save_status(status, model_dir)
         print("Status saved")
 
+print("Training has ended.")
 
 if __name__ == '__main__':
     pass

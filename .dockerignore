@@ -238,3 +238,10 @@ app/sm_3d/csharp_timers.json
 *.pth
 !final_model.pth
 app/sm_2d/storage/PPO/status.pt
+
+UnityProject/
+app/sm_3d
+
+app.egg-info
+*/__pycache__
+app/sm_2d/storage

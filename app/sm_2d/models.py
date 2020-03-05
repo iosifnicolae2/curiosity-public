@@ -24,6 +24,20 @@ class ACModel(nn.Module, torch_ac.RecurrentACModel):
         self.use_memory = use_memory
 
         # Define image embedding
+        # self.image_conv = nn.Sequential(
+        #     nn.Conv2d(3, 16, (2, 2)),
+        #     nn.ReLU(),
+        #     nn.MaxPool2d((2, 2)),
+        #     nn.Conv2d(16, 32, (2, 2)),
+        #     nn.ReLU(),
+        #     nn.Conv2d(32, 64, (2, 2)),
+        #     nn.ReLU()
+        # )
+        # n = obs_space["image"][0]
+        # m = obs_space["image"][1]
+        # self.image_embedding_size = ((n-1)//2-2)*((m-1)//2-2)*64
+
+        # Downgrade the number of image_conv outputs
         self.image_conv = nn.Sequential(
             nn.Conv2d(3, 16, (2, 2)),
             nn.ReLU(),
@@ -31,11 +45,18 @@ class ACModel(nn.Module, torch_ac.RecurrentACModel):
             nn.Conv2d(16, 32, (2, 2)),
             nn.ReLU(),
             nn.Conv2d(32, 64, (2, 2)),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.Conv2d(64, 32, (4, 4)),
+            nn.ReLU(),
+            nn.Conv2d(32, 16, (8, 8)),
+            nn.ReLU(),
+            nn.MaxPool2d((2, 2)),
         )
         n = obs_space["image"][0]
         m = obs_space["image"][1]
-        self.image_embedding_size = ((n-1)//2-2)*((m-1)//2-2)*64
+        # self.image_embedding_size = ((n-1)//2-2)*((m-1)//2-2)*64
+
+        self.image_embedding_size = 784
 
         # Define memory
         if self.use_memory:

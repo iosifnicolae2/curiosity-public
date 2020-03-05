@@ -238,3 +238,5 @@ app/sm_3d/csharp_timers.json
 *.pth
 !final_model.pth
 app/sm_2d/storage/PPO/status.pt
+
+*.pt
