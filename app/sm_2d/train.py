@@ -34,10 +34,10 @@ recurrence = 1
 optim_eps=1e-08
 clip_eps=0.2
 epochs=4
-batch_size=256
+batch_size=512
 log_interval=1
 save_interval = 10
-procs = 1
+procs = 10
 
 date = datetime.datetime.now().strftime("%y-%m-%d-%H-%M-%S")
 default_model_name = f"{env_name}_PPO_seed{seed}_{date}"
