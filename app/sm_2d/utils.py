@@ -6,7 +6,7 @@ import torch
 import torch_ac
 
 import gym
-from gym_minigrid.wrappers import RGBImgPartialObsWrapper, RGBImgObsWrapper
+from gym_minigrid.wrappers import RGBImgPartialObsWrapper
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -14,7 +14,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def make_env(env_key, seed=None):
     env = gym.make(env_key)
     env.seed(seed)
-    env = RGBImgObsWrapper(env)
+    env = RGBImgPartialObsWrapper(env)
     return env
 
 
