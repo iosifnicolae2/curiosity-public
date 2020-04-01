@@ -40,7 +40,7 @@ batch_size=256
 log_interval=1
 save_interval = 10
 number_of_envs = 3
-number_of_threads = 2
+number_of_threads = 1
 
 date = datetime.datetime.now().strftime("%y-%m-%d-%H-%M-%S")
 default_model_name = f"{env_name}_PPO_seed{seed}_{date}"
