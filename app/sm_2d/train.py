@@ -6,7 +6,6 @@ import time
 import collections
 
 import torch
-torch.multiprocessing.set_start_method('spawn')
 import torch_ac
 import torch.multiprocessing as mp
 
@@ -117,67 +116,57 @@ def synthesize(array):
     return d
 
 
-def train(status):
-    print("Starting the training..")
-    num_frames = status["num_frames"]
-    update = status["update"]
-    start_time = time.time()
-    while num_frames < frames:
-        update_start_time = time.time()
-        exps, logs1 = algo.collect_experiences()
-        logs2 = algo.update_parameters(exps)
-        logs = {**logs1, **logs2}
-        update_end_time = time.time()
+print("Starting the training..")
+num_frames = status["num_frames"]
+update = status["update"]
+start_time = time.time()
+while num_frames < frames:
+    update_start_time = time.time()
+    exps, logs1 = algo.collect_experiences()
+    logs2 = algo.update_parameters(exps)
+    logs = {**logs1, **logs2}
+    update_end_time = time.time()
 
-        num_frames += logs["num_frames"]
-        update += 1
+    num_frames += logs["num_frames"]
+    update += 1
 
-        if update % log_interval == 0:
-            fps = logs["num_frames"] / (update_end_time - update_start_time)
-            duration = int(time.time() - start_time)
-            return_per_episode = synthesize(logs["return_per_episode"])
-            rreturn_per_episode = synthesize(logs["reshaped_return_per_episode"])
-            num_frames_per_episode = synthesize(logs["num_frames_per_episode"])
+    if update % log_interval == 0:
+        fps = logs["num_frames"] / (update_end_time - update_start_time)
+        duration = int(time.time() - start_time)
+        return_per_episode = synthesize(logs["return_per_episode"])
+        rreturn_per_episode = synthesize(logs["reshaped_return_per_episode"])
+        num_frames_per_episode = synthesize(logs["num_frames_per_episode"])
 
-            header = ["update", "frames", "FPS", "duration"]
-            data = [update, num_frames, fps, duration]
-            header += ["rreturn_" + key for key in rreturn_per_episode.keys()]
-            data += rreturn_per_episode.values()
-            header += ["num_frames_" + key for key in num_frames_per_episode.keys()]
-            data += num_frames_per_episode.values()
-            header += ["entropy", "value", "policy_loss", "value_loss", "grad_norm"]
-            data += [logs["entropy"], logs["value"], logs["policy_loss"], logs["value_loss"], logs["grad_norm"]]
+        header = ["update", "frames", "FPS", "duration"]
+        data = [update, num_frames, fps, duration]
+        header += ["rreturn_" + key for key in rreturn_per_episode.keys()]
+        data += rreturn_per_episode.values()
+        header += ["num_frames_" + key for key in num_frames_per_episode.keys()]
+        data += num_frames_per_episode.values()
+        header += ["entropy", "value", "policy_loss", "value_loss", "grad_norm"]
+        data += [logs["entropy"], logs["value"], logs["policy_loss"], logs["value_loss"], logs["grad_norm"]]
 
-            print(
-                "U {} | F {:06} | FPS {:04.0f} | D {} | rR:μσmM {:.2f} {:.2f} {:.2f} {:.2f} | F:μσmM {:.1f} {:.1f} {} {} |"
-                " H {:.3f} | V {:.3f} | pL {:.3f} | vL {:.3f} | ∇ {:.3f}".format(*data),
-            )
+        print(
+            "U {} | F {:06} | FPS {:04.0f} | D {} | rR:μσmM {:.2f} {:.2f} {:.2f} {:.2f} | F:μσmM {:.1f} {:.1f} {} {} |"
+            " H {:.3f} | V {:.3f} | pL {:.3f} | vL {:.3f} | ∇ {:.3f}".format(*data),
+        )
 
-            header += ["return_" + key for key in return_per_episode.keys()]
-            data += return_per_episode.values()
+        header += ["return_" + key for key in return_per_episode.keys()]
+        data += return_per_episode.values()
 
-        # Save status
+    # Save status
 
-        if save_interval > 0 and update % save_interval == 0:
-            status = {
-                "num_frames": num_frames,
-                "update": update,
-                "model_state": acmodel.state_dict(),
-                "optimizer_state": algo.optimizer.state_dict(),
-            }
-            if hasattr(preprocess_obss, "vocab"):
-                status["vocab"] = preprocess_obss.vocab.vocab
-            save_status(status, model_dir)
-            print("Status saved")
-
-acmodel.share_memory()
-
-processes = []
-for i in range(number_of_threads): # No. of processes
-    p = mp.Process(target=train, args=(status,))
-    p.start()
-    processes.append(p)
-for p in processes: p.join()
+    if save_interval > 0 and update % save_interval == 0:
+        status = {
+            "num_frames": num_frames,
+            "update": update,
+            "model_state": acmodel.state_dict(),
+            "optimizer_state": algo.optimizer.state_dict(),
+        }
+        if hasattr(preprocess_obss, "vocab"):
+            status["vocab"] = preprocess_obss.vocab.vocab
+        save_status(status, model_dir)
+        print("Status saved")
 
 print("Training has ended.")
 
