@@ -9,7 +9,7 @@ setup(
    packages=['app'],
    install_requires=[
       'torch',
-      'torch_ac',
+      # 'torch_ac',
       'NumPy',
       'gym',
       'gym-minigrid',

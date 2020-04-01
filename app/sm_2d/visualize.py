@@ -6,8 +6,6 @@ import gym_minigrid
 from app.sm_2d.utils import get_model_dir, make_env
 from app.sm_2d.agents import Agent
 
-from app.sm_2d.env_registers import *
-
 env = 'MiniGridNoLimit-Empty-6x6-v0'
 seed = 1
 mem = False
