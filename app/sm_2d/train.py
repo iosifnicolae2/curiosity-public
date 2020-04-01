@@ -6,6 +6,7 @@ import time
 import collections
 
 import torch
+torch.multiprocessing.set_start_method('spawn')
 import torch_ac
 import torch.multiprocessing as mp
 
@@ -50,7 +51,6 @@ model_dir = get_model_dir(model_name)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 if device == "cuda":
-    torch.multiprocessing.set_start_method('spawn')
     torch.backends.cudnn.benchmark = True
     torch.backends.cudnn.enabled = True
 
