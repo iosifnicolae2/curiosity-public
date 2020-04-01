@@ -7,7 +7,6 @@ import collections
 
 import torch
 import torch_ac
-import torch.multiprocessing as mp
 
 import gym
 import gym_minigrid
@@ -38,7 +37,7 @@ epochs=4
 batch_size=256
 log_interval=1
 save_interval = 10
-number_of_envs = 50
+number_of_envs = 300
 
 date = datetime.datetime.now().strftime("%y-%m-%d-%H-%M-%S")
 default_model_name = f"{env_name}_PPO_seed{seed}_{date}"
