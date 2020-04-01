@@ -6,7 +6,7 @@ docker push iosifmailo/curiosity
 # Start Gradient job
 gradient experiments run singlenode \
   --command 'cd /src && python app/sm_2d/train.py' \
-  --experimentEnv "{\"RL_STORAGE\": \"/artifacts/v2\"}" \
+  --experimentEnv "{\"RL_STORAGE\": \"/artifacts/v3\"}" \
   --container iosifmailo/curiosity:latest \
   --machineType GPU+ \
   --name PyTorch \
